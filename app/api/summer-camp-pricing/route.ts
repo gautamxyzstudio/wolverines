@@ -6,7 +6,6 @@ import { AuthError, requireAdmin } from "@/app/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin(request);
 
     const pricing = await prisma.summerCampPricing.findMany({
       orderBy: {
@@ -31,14 +30,6 @@ export async function GET(request: NextRequest) {
       { status: 200 },
     );
   } catch (error) {
-    if (error instanceof AuthError) {
-      return NextResponse.json(
-        {
-          error: error.message,
-        },
-        { status: 401 },
-      );
-    }
     console.log("Get pricing error", error);
     return NextResponse.json(
       {
