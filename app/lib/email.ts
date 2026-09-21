@@ -1,6 +1,3 @@
-// Centralized Email Sending & Templates for The Wolverines Field Hockey Club
-// Powered by Brevo SMTP API
-
 export interface ContactUsData {
   id: string;
   fullName: string;
@@ -64,98 +61,537 @@ export interface JoinOurClubData {
 }
 
 // ----------------------------------------------------------------------
-// Base HTML Email Shell (Consistent Brand Styling & High Deliverability)
+// User & Admin HTML Email Shells
 // ----------------------------------------------------------------------
-function getEmailShell({
-  title,
-  preheader,
-  badgeText,
-  badgeBg = "#D32F2F",
-  contentHtml,
-  footerNote,
-}: {
+
+type EmailShellOptions = {
   title: string;
   preheader?: string;
   badgeText?: string;
   badgeBg?: string;
   contentHtml: string;
   footerNote?: string;
-}) {
+};
+
+function getUserEmailShell({
+  title,
+  preheader,
+  badgeText,
+  badgeBg = "#D9001B",
+  contentHtml,
+  footerNote,
+}: EmailShellOptions) {
+  const siteUrl =
+    process.env.LIVE_URL ||
+    "https://demo.thewolverines.ca";
+
+  // Place the logo in Next.js public/, for example:
+  // public/wolverines-email-logo.png
+  //
+  // Email clients need an absolute URL, so the email uses the deployed
+  // website URL rather than a relative /images/... path.
+  const logoUrl =
+    process.env.WOLVERINES_EMAIL_LOGO_URL ||
+    `${siteUrl.replace(/\/$/, "")}/images/logo.png`;
+
   return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light">
   <title>${title}</title>
+
   <style>
-    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
-    body { margin: 0; padding: 0; width: 100% !important; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    body, table, td, a {
+      -webkit-text-size-adjust:100%;
+      -ms-text-size-adjust:100%;
+    }
+
+    table, td {
+      mso-table-lspace:0pt;
+      mso-table-rspace:0pt;
+    }
+
+    img {
+      -ms-interpolation-mode:bicubic;
+      border:0;
+      outline:none;
+      text-decoration:none;
+      display:block;
+    }
+
+    body {
+      margin:0;
+      padding:0;
+      width:100% !important;
+      background-color:#f4f4f4;
+      font-family:Arial,Helvetica,sans-serif;
+      color-scheme:light;
+    }
+
+    a {
+      color:#D9001B;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .brand-header, .admin-header {
+        background:#D9001B !important;
+        background-color:#D9001B !important;
+      }
+      .brand-logo, .admin-logo {
+        background:#D9001B !important;
+        background-color:#D9001B !important;
+      }
+    }
+
+    @media only screen and (max-width:620px) {
+      .email-container {
+        width:100% !important;
+      }
+
+      .email-body {
+        padding:28px 20px 24px !important;
+      }
+
+      .brand-logo {
+        width:230px !important;
+        max-width:80% !important;
+      }
+
+      .social-icon {
+        width:44px !important;
+        height:44px !important;
+      }
+    }
   </style>
 </head>
-<body style="margin: 0; padding: 24px 12px; background-color: #f3f4f6;">
-  ${preheader ? `<div style="display: none; max-height: 0px; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #fff;">${preheader}</div>` : ""}
 
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto;">
-    <!-- Main Card Container -->
+<body
+  bgcolor="#f4f4f4"
+  style="margin:0;padding:24px 10px;background:#f4f4f4;background-color:#f4f4f4;"
+>
+  ${
+    preheader
+      ? `
+  <div style="
+    display:none;
+    max-height:0;
+    overflow:hidden;
+    mso-hide:all;
+    font-size:1px;
+    line-height:1px;
+    color:#ffffff;
+  ">${preheader}</div>
+  `
+      : ""
+  }
+
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
     <tr>
-      <td style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
-        
-        <!-- Header Banner -->
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+      <td align="center">
+
+        <table
+          role="presentation"
+          class="email-container"
+          border="0"
+          cellpadding="0"
+          cellspacing="0"
+          width="600"
+          bgcolor="#ffffff"
+          style="width:100%;max-width:600px;background:#ffffff;"
+        >
+
+          <!-- HEADER -->
           <tr>
-            <td style="background: linear-gradient(135deg, #111111 0%, #1f1f1f 50%, #D32F2F 100%); padding: 32px 28px; text-align: center;">
-              <!-- Brand Title -->
-              <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #ffffff;">
-                THE WOLVERINES
-              </h1>
-              <p style="margin: 4px 0 0 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #f87171;">
-                FIELD HOCKEY CLUB • ABBOTSFORD, BC
-              </p>
+            <td
+              class="brand-header"
+              align="center"
+              bgcolor="#D9001B"
+              style="background:#D9001B !important;background-color:#D9001B !important;padding:24px 20px 22px;"
+            >
+              <!--
+                The important brand text is part of the logo image.
+                This avoids Gmail/Outlook dark-mode text inversion.
+              -->
+              <a
+                href="${siteUrl}"
+                target="_blank"
+                style="display:inline-block;text-decoration:none;"
+              >
+                <img
+                  class="brand-logo"
+                  src="${logoUrl}"
+                  width="260"
+                  alt="The Wolverines Field Hockey Club • Abbotsford"
+                  style="display:block;width:260px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;background:#D9001B;background-color:#D9001B;"
+                >
+              </a>
 
               ${
                 badgeText
                   ? `
-                <div style="margin-top: 18px;">
-                  <span style="display: inline-block; background-color: ${badgeBg}; color: #ffffff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 6px 14px; border-radius: 9999px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-                    ${badgeText}
-                  </span>
-                </div>
+              <div style="margin-top:16px;">
+                <span
+                  style="display:inline-block;background:${badgeBg};color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:16px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:7px 14px;border-radius:4px;"
+                >${badgeText}</span>
+              </div>
               `
                   : ""
               }
             </td>
           </tr>
-        </table>
 
-        <!-- Body Content -->
-        <div style="padding: 32px 28px; color: #1f2937; line-height: 1.6; font-size: 14px;">
-          ${contentHtml}
-        </div>
-
-        <!-- Footer -->
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+          <!-- BODY -->
           <tr>
-            <td style="background-color: #0f0f0f; padding: 24px 28px; text-align: center; color: #9ca3af; font-size: 12px; line-height: 1.6; border-top: 1px solid #222222;">
-              <p style="margin: 0 0 8px 0; color: #d1d5db; font-weight: 600;">
-                The Wolverines Field Hockey Club
+            <td
+              class="email-body"
+              bgcolor="#ffffff"
+              style="padding:34px 32px 30px;background:#ffffff;"
+            >
+              ${contentHtml}
+            </td>
+          </tr>
+
+          <!-- RED FOOTER -->
+          <tr>
+            <td
+              align="center"
+              bgcolor="#D9001B"
+              style="background:#D9001B;padding:30px 24px;"
+            >
+              <p
+                style="margin:0 0 9px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;font-weight:700;color:#ffffff;"
+              >
+                Thank you for being part of The Wolverines community.
               </p>
-              <p style="margin: 0 0 12px 0;">
-                Abbotsford, British Columbia, Canada<br />
-                <a href="mailto:support@thewolverines.ca" style="color: #f87171; text-decoration: none;">support@thewolverines.ca</a> • 
-                <a href="tel:+16047101373" style="color: #f87171; text-decoration: none;">+1 (604) 710-1373</a>
+
+              <p
+                style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:20px;color:#ffffff;"
+              >
+                Questions? Call
+                <a
+                  href="tel:+16047101373"
+                  style="color:#ffffff;text-decoration:underline;font-weight:700;"
+                >+1 (604) 710-1373</a>
+                <br>
+                <a
+                  href="mailto:support@thewolverines.ca"
+                  style="color:#ffffff;text-decoration:underline;"
+                >support@thewolverines.ca</a>
               </p>
+            </td>
+          </tr>
+
+          <!-- BLACK SOCIAL FOOTER -->
+          <tr>
+            <td
+              align="center"
+              bgcolor="#000000"
+              style="background:#000000;padding:28px 24px 30px;"
+            >
+              <div
+                style="font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:26px;font-weight:900;letter-spacing:1.5px;color:#ffffff;text-transform:uppercase;"
+              >
+                THE WOLVERINES
+              </div>
+
+              <p
+                style="margin:8px 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:24px;font-weight:800;color:#ffffff;letter-spacing:1px;"
+              >
+                STAY CONNECTED
+              </p>
+
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
+                <tr>
+
+                  <!-- FACEBOOK -->
+                  <td align="center" valign="top" style="padding:0 12px;">
+                    <a
+                      href="https://www.facebook.com/people/Wolverines-FHC/100093636536434/"
+                      target="_blank"
+                      style="text-decoration:none;display:inline-block;"
+                    >
+                      <img
+                        class="social-icon"
+                        src="https://img.icons8.com/color/96/facebook-new.png"
+                        width="48"
+                        height="48"
+                        alt="Facebook"
+                        style="display:block;width:48px;height:48px;border:0;outline:none;text-decoration:none;"
+                      >
+                    </a>
+                    <p
+                      style="margin:7px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;font-weight:700;color:#ffffff;"
+                    >Facebook</p>
+                  </td>
+
+                  <!-- INSTAGRAM -->
+                  <td align="center" valign="top" style="padding:0 12px;">
+                    <a
+                      href="https://www.instagram.com/wolverinesfhc/"
+                      target="_blank"
+                      style="text-decoration:none;display:inline-block;"
+                    >
+                      <img
+                        class="social-icon"
+                        src="https://img.icons8.com/color/96/instagram-new--v1.png"
+                        width="48"
+                        height="48"
+                        alt="Instagram"
+                        style="display:block;width:48px;height:48px;border:0;outline:none;text-decoration:none;"
+                      >
+                    </a>
+                    <p
+                      style="margin:7px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;font-weight:700;color:#ffffff;"
+                    >Instagram</p>
+                  </td>
+
+                </tr>
+              </table>
+
+              <p
+                style="margin:20px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:17px;color:#b8b8b8;"
+              >
+                The Wolverines Field Hockey Club<br>
+                Abbotsford, British Columbia, Canada
+              </p>
+
               ${
                 footerNote
-                  ? `<p style="margin: 12px 0 0 0; font-size: 11px; color: #6b7280; border-top: 1px solid #1f2937; padding-top: 10px;">${footerNote}</p>`
+                  ? `
+              <p style="margin:12px 0 0;padding-top:10px;border-top:1px solid #222222;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:15px;color:#666666;">
+                ${footerNote}
+              </p>
+              `
                   : ""
               }
             </td>
           </tr>
-        </table>
 
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
+}
+
+function getAdminEmailShell({
+  title,
+  preheader,
+  badgeText,
+  badgeBg = "#D9001B",
+  contentHtml,
+  footerNote,
+}: EmailShellOptions) {
+  const siteUrl =
+    process.env.LIVE_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.SITE_URL ||
+    "https://demo.thewolverines.ca";
+
+  // IMPORTANT: this must be the publicly reachable Next.js logo URL.
+  // Your local file is: public/images/logo.png
+  const logoUrl =
+    process.env.WOLVERINES_EMAIL_LOGO_URL ||
+    `${siteUrl.replace(/\/$/, "")}/images/logo.png`;
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light">
+  <title>${title}</title>
+
+  <style>
+    body, table, td, a {
+      -webkit-text-size-adjust:100%;
+      -ms-text-size-adjust:100%;
+    }
+
+    table, td {
+      mso-table-lspace:0pt;
+      mso-table-rspace:0pt;
+    }
+
+    img {
+      -ms-interpolation-mode:bicubic;
+      border:0;
+      outline:none;
+      text-decoration:none;
+      display:block;
+    }
+
+    body {
+      margin:0;
+      padding:0;
+      width:100% !important;
+      background:#eef0f2;
+      font-family:Arial,Helvetica,sans-serif;
+      color-scheme:light;
+    }
+
+    @media only screen and (max-width:620px) {
+      .admin-container {
+        width:100% !important;
+      }
+
+      .admin-content {
+        padding:24px 20px 26px !important;
+      }
+
+      .admin-logo {
+        width:220px !important;
+        max-width:85% !important;
+        margin:0 auto !important;
+      }
+    }
+  </style>
+</head>
+
+<body
+  bgcolor="#eef0f2"
+  style="margin:0;padding:24px 10px;background:#eef0f2;background-color:#eef0f2;"
+>
+  ${
+    preheader
+      ? `
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#ffffff;">
+    ${preheader}
+  </div>
+  `
+      : ""
+  }
+
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+      <td align="center">
+
+        <table
+          role="presentation"
+          class="admin-container"
+          border="0"
+          cellpadding="0"
+          cellspacing="0"
+          width="600"
+          bgcolor="#ffffff"
+          style="width:100%;max-width:600px;background:#ffffff;border:1px solid #dfe3e8;"
+        >
+
+          <!-- ADMIN HEADER -->
+          <tr>
+            <td
+              class="admin-header"
+              align="center"
+              bgcolor="#D9001B"
+              style="background:#D9001B !important;background-color:#D9001B !important;padding:22px 20px 20px;"
+            >
+              <!-- Centered brand logo -->
+              <a
+                href="${siteUrl}"
+                target="_blank"
+                style="display:block;text-decoration:none;text-align:center;"
+              >
+                <img
+                  class="admin-logo"
+                  src="${logoUrl}"
+                  width="230"
+                  alt="The Wolverines Field Hockey Club"
+                  style="display:block;width:230px;max-width:85%;height:auto;margin:0 auto;border:0;outline:none;text-decoration:none;"
+                >
+              </a>
+
+              <!-- Separate dark badge so it does not blend into the red header -->
+              ${
+                badgeText
+                  ? `
+              <div style="margin-top:14px;text-align:center;">
+                <span
+                  style="display:inline-block;background:#111111 !important;background-color:#111111 !important;color:#ffffff !important;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:14px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:7px 14px;border-radius:4px;border:1px solid rgba(255,255,255,.18);"
+                >${badgeText}</span>
+              </div>
+              `
+                  : ""
+              }
+            </td>
+          </tr>
+
+          <!-- ADMIN TITLE BAR -->
+          <tr>
+            <td
+              bgcolor="#f7f7f7"
+              style="background:#f7f7f7;border-bottom:1px solid #e5e7eb;padding:18px 26px;"
+            >
+              <h1 style="margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:21px;line-height:28px;font-weight:800;color:#111111;">
+                ${title}
+              </h1>
+            </td>
+          </tr>
+
+          <!-- ADMIN CONTENT -->
+          <tr>
+            <td
+              class="admin-content"
+              bgcolor="#ffffff"
+              style="padding:28px 26px 30px;background:#ffffff;"
+            >
+              ${contentHtml}
+            </td>
+          </tr>
+
+          <!-- ADMIN FOOTER -->
+          <tr>
+            <td
+              bgcolor="#111111"
+              style="background:#111111;padding:18px 26px;"
+            >
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td
+                    align="left"
+                    style="font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:17px;color:#9ca3af;"
+                  >
+                    The Wolverines Field Hockey Club<br>
+                    Abbotsford, British Columbia, Canada
+                  </td>
+
+                  <td
+                    align="right"
+                    style="font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:17px;"
+                  >
+                    <a
+                      href="mailto:support@thewolverines.ca"
+                      style="color:#ffffff;text-decoration:none;"
+                    >support@thewolverines.ca</a>
+                    <br>
+                    <a
+                      href="tel:+16047101373"
+                      style="color:#ffffff;text-decoration:none;"
+                    >+1 (604) 710-1373</a>
+                  </td>
+                </tr>
+              </table>
+
+              ${
+                footerNote
+                  ? `
+              <div style="margin-top:12px;padding-top:10px;border-top:1px solid #292929;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:15px;color:#6b7280;">
+                ${footerNote}
+              </div>
+              `
+                  : ""
+              }
+            </td>
+          </tr>
+
+        </table>
       </td>
     </tr>
   </table>
@@ -179,7 +615,7 @@ export async function sendContactUsNotification(contact: ContactUsData) {
     throw new Error("Brevo email configuration missing");
   }
 
-  const htmlContent = getEmailShell({
+  const htmlContent = getAdminEmailShell({
     title: "New Contact Us Message",
     preheader: `New inquiry from ${contact.fullName}`,
     badgeText: "General Inquiry",
@@ -238,13 +674,15 @@ export async function sendContactUsNotification(contact: ContactUsData) {
 
   if (!response.ok) {
     const errorData = await response.text();
-    throw new Error(`Brevo contact us admin email failed: ${response.status} ${errorData}`);
+    throw new Error(
+      `Brevo contact us admin email failed: ${response.status} ${errorData}`,
+    );
   }
 
   return await response.json();
 }
 
-// Sent to User (Auto-Reply Confirmation)
+// Sent to User
 export async function sendContactUsUserAcknowledgment(contact: ContactUsData) {
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
@@ -252,7 +690,7 @@ export async function sendContactUsUserAcknowledgment(contact: ContactUsData) {
 
   if (!apiKey || !senderEmail) return;
 
-  const htmlContent = getEmailShell({
+  const htmlContent = getUserEmailShell({
     title: "Thank You for Contacting The Wolverines",
     preheader: "We have received your enquiry and will be in touch shortly.",
     badgeText: "Inquiry Received",
@@ -286,7 +724,6 @@ export async function sendContactUsUserAcknowledgment(contact: ContactUsData) {
         </p>
       </div>
     `,
-    footerNote: `Inquiry Ref: ${contact.id}`,
   });
 
   try {
@@ -317,7 +754,9 @@ export const sendRegistrationNotification = sendContactUsNotification;
 // ----------------------------------------------------------------------
 
 // Sent to Admin
-export async function sendCampRegistrationNotification(registration: CampRegistrationData) {
+export async function sendCampRegistrationNotification(
+  registration: CampRegistrationData,
+) {
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
   const senderName = process.env.BREVO_SENDER_NAME || "The Wolverines";
@@ -330,8 +769,8 @@ export async function sendCampRegistrationNotification(registration: CampRegistr
   const childrenList = Array.isArray(registration.children)
     ? registration.children
     : typeof registration.children === "string"
-    ? JSON.parse(registration.children || "[]")
-    : [];
+      ? JSON.parse(registration.children || "[]")
+      : [];
 
   const childrenRows = childrenList
     .map(
@@ -347,9 +786,12 @@ export async function sendCampRegistrationNotification(registration: CampRegistr
     .join("");
 
   const formattedTotal = Number(registration.totalAmount || 0).toFixed(2);
-  const campName = registration.campType?.toUpperCase() === "WINTER" ? "Winter Camp" : "Summer Camp";
+  const campName =
+    registration.campType?.toUpperCase() === "WINTER"
+      ? "Winter Camp"
+      : "Summer Camp";
 
-  const htmlContent = getEmailShell({
+  const htmlContent = getAdminEmailShell({
     title: `New ${campName} Registration`,
     preheader: `New paid registration from ${registration.parentGuardianName} ($${formattedTotal} CAD)`,
     badgeText: `${campName} • Paid`,
@@ -480,14 +922,18 @@ export async function sendCampRegistrationNotification(registration: CampRegistr
 
   if (!response.ok) {
     const errorData = await response.text();
-    throw new Error(`Brevo camp admin email failed: ${response.status} ${errorData}`);
+    throw new Error(
+      `Brevo camp admin email failed: ${response.status} ${errorData}`,
+    );
   }
 
   return await response.json();
 }
 
 // Sent to Parent (Receipt & Camp Instructions)
-export async function sendCampParentConfirmation(registration: CampRegistrationData) {
+export async function sendCampParentConfirmation(
+  registration: CampRegistrationData,
+) {
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
   const senderName = process.env.BREVO_SENDER_NAME || "The Wolverines";
@@ -499,8 +945,8 @@ export async function sendCampParentConfirmation(registration: CampRegistrationD
   const childrenList = Array.isArray(registration.children)
     ? registration.children
     : typeof registration.children === "string"
-    ? JSON.parse(registration.children || "[]")
-    : [];
+      ? JSON.parse(registration.children || "[]")
+      : [];
 
   const childrenRows = childrenList
     .map(
@@ -515,9 +961,12 @@ export async function sendCampParentConfirmation(registration: CampRegistrationD
     .join("");
 
   const formattedTotal = Number(registration.totalAmount || 0).toFixed(2);
-  const campName = registration.campType?.toUpperCase() === "WINTER" ? "Winter Camp" : "Summer Camp";
+  const campName =
+    registration.campType?.toUpperCase() === "WINTER"
+      ? "Winter Camp"
+      : "Summer Camp";
 
-  const htmlContent = getEmailShell({
+  const htmlContent = getUserEmailShell({
     title: `${campName} Registration Confirmed`,
     preheader: `Your ${campName} registration is confirmed! Registration ID: ${registration.registrationId}`,
     badgeText: "Registration Confirmed",
@@ -604,7 +1053,9 @@ export async function sendCampParentConfirmation(registration: CampRegistrationD
     },
     body: JSON.stringify({
       sender: { name: senderName, email: senderEmail },
-      to: [{ email: registration.email, name: registration.parentGuardianName }],
+      to: [
+        { email: registration.email, name: registration.parentGuardianName },
+      ],
       subject: `${campName} Registration Confirmed - The Wolverines (ID: ${registration.registrationId})`,
       htmlContent,
     }),
@@ -612,7 +1063,9 @@ export async function sendCampParentConfirmation(registration: CampRegistrationD
 
   if (!response.ok) {
     const errorData = await response.text();
-    throw new Error(`Brevo camp parent confirmation email failed: ${response.status} ${errorData}`);
+    throw new Error(
+      `Brevo camp parent confirmation email failed: ${response.status} ${errorData}`,
+    );
   }
 
   return await response.json();
@@ -639,7 +1092,7 @@ export async function sendDonationThankYou({
 
   const formattedAmount = Number(amount || 0).toFixed(2);
 
-  const htmlContent = getEmailShell({
+  const htmlContent = getUserEmailShell({
     title: "Thank You for Supporting The Wolverines",
     preheader: `Thank you for your generous gift of ${currency.toUpperCase()} $${formattedAmount}`,
     badgeText: "Official Donation Receipt",
@@ -733,7 +1186,7 @@ export async function sendDonationAdminNotification({
 
   const formattedAmount = Number(amount || 0).toFixed(2);
 
-  const htmlContent = getEmailShell({
+  const htmlContent = getAdminEmailShell({
     title: "New Donation Received",
     preheader: `New donation of ${currency.toUpperCase()} $${formattedAmount} from ${donorName}`,
     badgeText: "Donation Received",
@@ -799,7 +1252,9 @@ export async function sendDonationAdminNotification({
 // 4. Join Our Club Applications
 // ----------------------------------------------------------------------
 
-export async function sendJoinOurClubAdminNotification(joinOurClub: JoinOurClubData) {
+export async function sendJoinOurClubAdminNotification(
+  joinOurClub: JoinOurClubData,
+) {
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
   const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
@@ -813,7 +1268,7 @@ export async function sendJoinOurClubAdminNotification(joinOurClub: JoinOurClubD
     ? new Date(joinOurClub.dateOfBirth).toLocaleDateString("en-CA")
     : "N/A";
 
-  const htmlContent = getEmailShell({
+  const htmlContent = getAdminEmailShell({
     title: "New Join Our Club Request",
     preheader: `New player application for ${joinOurClub.childName} (Parent: ${joinOurClub.parentGuardianName})`,
     badgeText: "Club Application",
@@ -926,7 +1381,7 @@ export async function sendDynamicEmail({
   // Wrap user custom content inside brand shell if not already full HTML document
   const finalHtml = htmlContent.includes("<!DOCTYPE html")
     ? htmlContent
-    : getEmailShell({
+    : getUserEmailShell({
         title: subject,
         contentHtml: htmlContent,
       });
