@@ -56,7 +56,7 @@ export default function HeroSection() {
           {/* Right Column: Floating Frosted Glass Cards Panel */}
           <div className="lg:col-span-5 w-full animate-hero-right">
             <div
-              className="relative overflow-hidden rounded-2xl p-4 sm:p-5 border border-white/25 border-b-white/10 bg-gradient-to-b from-white/[0.22] via-white/[0.08] to-transparent backdrop-blur-md"
+              className="relative overflow-hidden rounded-2xl p-4 sm:p-5 border border-white/25 border-b-white/10 bg-gradient-to-b from-white/[0.24] via-white/[0.12] to-white/[0.04] backdrop-blur-md"
               style={{
                 backdropFilter: "blur(16px)",
                 WebkitBackdropFilter: "blur(16px)",
@@ -64,12 +64,12 @@ export default function HeroSection() {
                   "0 20px 40px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255,255,255,0.45)",
               }}
             >
-              {/* White frosted fade down to half - No black */}
+              {/* White frosted fade extending further down */}
               <div
-                className="absolute inset-x-0 top-0 h-[55%] pointer-events-none"
+                className="absolute inset-x-0 top-0 h-[88%] pointer-events-none"
                 style={{
                   background:
-                    "linear-gradient(180deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.10) 60%, rgba(255,255,255,0) 100%)",
+                    "linear-gradient(180deg, rgba(255,255,255,0.36) 0%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.06) 80%, rgba(255,255,255,0) 100%)",
                 }}
               />
 

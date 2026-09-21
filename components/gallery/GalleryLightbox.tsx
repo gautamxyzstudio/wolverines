@@ -54,7 +54,7 @@ export default function GalleryLightbox({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-3 sm:p-6 select-none animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-6 select-none animate-in fade-in duration-200"
       onClick={onClose}
     >
       {/* Lightbox Content Container */}
@@ -86,11 +86,12 @@ export default function GalleryLightbox({
         </div>
 
         {/* Main Image Frame with Navigation Arrows */}
-        <div className="relative w-full h-[55vh] sm:h-[65vh] md:h-[70vh] flex items-center justify-center bg-black/40 rounded-xl overflow-hidden shadow-2xl border border-white/10">
+        <div className="relative w-full h-[55vh] sm:h-[65vh] md:h-[70vh] flex items-center justify-center bg-black/25 rounded-xl overflow-hidden shadow-2xl border border-white/10">
           <Image
             src={currentItem.image}
             alt={currentItem.alt}
             fill
+            unoptimized
             className="object-contain"
             sizes="(max-width: 1200px) 100vw, 1200px"
             priority

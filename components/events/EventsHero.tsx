@@ -11,79 +11,79 @@ interface EventPhoto {
 
 const eventPhotos: EventPhoto[] = [
   {
-    id: "photo-boy-mic",
-    src: "/images/event_boy_mic.png",
-    alt: "Young club member speaking at microphone",
+    id: "photo-tournament-1",
+    src: "/gallery_img/tournament1-1536x1137.webp",
+    alt: "Tournament match action on field",
   },
   {
-    id: "photo-mic-speech",
-    src: "/images/event_mic_speech.jpg",
+    id: "photo-speaking-1",
+    src: "/gallery_img/speaking1-864x1536.webp",
     alt: "Youth player speaking at ceremony",
   },
   {
-    id: "photo-match-field",
-    src: "/images/event_match_field.jpg",
+    id: "photo-tournament-3",
+    src: "/gallery_img/tournament3-1536x1024.webp",
     alt: "Full field hockey match in action",
   },
   {
-    id: "photo-fence-battle",
-    src: "/images/event_fence_battle.jpg",
-    alt: "Junior players competing by the fence",
+    id: "photo-training-6",
+    src: "/gallery_img/training6-1536x1157.webp",
+    alt: "Junior players training tactical drills",
   },
   {
-    id: "photo-kids-action",
-    src: "/images/event_kids_action.jpg",
-    alt: "Two young players with hockey sticks on turf",
+    id: "photo-winter-11",
+    src: "/gallery_img/winter11-1536x1024.webp",
+    alt: "Winter championship tournament play",
   },
   {
-    id: "photo-goal-shot",
-    src: "/images/event_goal_shot.jpg",
-    alt: "Striker taking a shot against goalkeeper",
+    id: "photo-development-7",
+    src: "/gallery_img/development7-1536x1157.webp",
+    alt: "Youth fitness and athletic conditioning",
   },
   {
-    id: "photo-girls-tents",
-    src: "/images/event_girls_tents.jpg",
-    alt: "Girls running with ball during outdoor tournament",
+    id: "photo-hiking-10",
+    src: "/gallery_img/hiking10-1536x1157.webp",
+    alt: "Team expedition in Fraser Valley mountains",
   },
   {
-    id: "photo-slide-blue",
-    src: "/images/event_slide_blue.jpg",
-    alt: "Player tackling with stick during competitive match",
+    id: "photo-tournament-10",
+    src: "/gallery_img/tournament10-1536x1024.webp",
+    alt: "Championship victory celebration",
   },
   {
-    id: "photo-red-action",
-    src: "/images/event_red_action.jpg",
-    alt: "Player in red jersey in action on field",
+    id: "photo-winter-4",
+    src: "/gallery_img/winter4-1536x1024.webp",
+    alt: "Indoor match scrimmage action",
   },
   {
-    id: "photo-low-tackle",
-    src: "/images/event_low_tackle.jpg",
-    alt: "Player stretching low with stick on turf",
+    id: "photo-training-1",
+    src: "/gallery_img/training1-1024x576.webp",
+    alt: "Stick handling and agility training",
   },
   {
-    id: "photo-indoor-drills",
-    src: "/images/event_indoor_drills.jpg",
-    alt: "Players performing indoor fitness drills",
+    id: "photo-speaking-7",
+    src: "/gallery_img/speaking7-1536x1181.webp",
+    alt: "Annual ceremony presentation",
   },
   {
-    id: "photo-team-fitness",
-    src: "/images/event_team_fitness.jpg",
-    alt: "Team outdoor fitness conditioning",
+    id: "photo-development-1",
+    src: "/gallery_img/development1-1536x864.webp",
+    alt: "Team fitness session",
   },
   {
-    id: "photo-tournaments",
-    src: "/images/expertise_tournaments.png",
-    alt: "Team celebrating tournament victory",
+    id: "photo-tournament-8",
+    src: "/gallery_img/tournament8-1536x1024.webp",
+    alt: "High intensity match on turf",
   },
   {
-    id: "photo-team-group",
-    src: "/images/about_team_group.png",
-    alt: "Wolverines team squad group photo",
+    id: "photo-winter-16",
+    src: "/gallery_img/winter16-1536x1024.webp",
+    alt: "Winter medal and trophy celebration",
   },
   {
-    id: "photo-sticks-huddle",
-    src: "/images/about_sticks_huddle.png",
-    alt: "Team sticks huddle before the match",
+    id: "photo-hiking-3",
+    src: "/gallery_img/hiking3-1024x771.webp",
+    alt: "Team standing at mountain viewpoint",
   },
 ];
 
@@ -144,7 +144,7 @@ export default function EventsHero() {
       {/* Top Hero Banner - Full-Bleed 100% Width */}
       <section
         ref={sectionRef}
-        className="relative w-full overflow-hidden rounded-t-none rounded-b-[36px] sm:rounded-b-[48px] lg:rounded-b-[60px] bg-neutral-900 min-h-[420px] sm:min-h-[480px] lg:min-h-[520px] flex items-center justify-center"
+        className="relative w-full overflow-hidden rounded-t-none rounded-b-[20px] sm:rounded-b-[28px] lg:rounded-b-[36px] bg-neutral-900 min-h-[500px] sm:min-h-[560px] md:min-h-[620px] lg:min-h-[680px] flex items-center justify-center"
       >
         {/* Background Video Container - Full Bleed */}
         <div className="absolute inset-0 w-full h-full bg-neutral-950">
@@ -154,23 +154,27 @@ export default function EventsHero() {
             muted
             playsInline
             preload="auto"
-            className="w-full h-full object-cover object-[center_35%]"
+            className="w-full h-full"
+            style={{
+              objectFit: "cover",
+              objectPosition: "50% 100%",
+            }}
           >
             <source src="/videos/event-hero-section.mp4" type="video/mp4" />
           </video>
           {/* Subtle contrast overlay */}
-          <div className="absolute inset-0 bg-black/35 pointer-events-none" />
+          <div className="absolute inset-0 bg-black/30 pointer-events-none" />
         </div>
 
-        {/* Hero Content Container - Standard site-container */}
+        {/* Hero Content Container - Centered */}
         <div
-          className={`site-container relative z-10 py-14 sm:py-18 lg:py-20 flex flex-col items-center text-center transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-8"
+          className={`site-container relative z-10 py-10 sm:py-14 lg:py-16 flex flex-col items-center text-center transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6"
           }`}
         >
           {/* Main Title */}
           <h1
-            className="text-[52px] sm:text-[68px] md:text-[84px] lg:text-[96px] font-normal leading-none tracking-wider text-white uppercase drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)] mb-3 sm:mb-4"
+            className="text-[46px] sm:text-[62px] md:text-[76px] lg:text-[88px] font-normal leading-none tracking-wider text-white uppercase drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)] mb-1.5 sm:mb-2"
             style={{
               fontFamily: 'var(--font-bebas-neue), "Bebas Neue", sans-serif',
               fontWeight: 400,
@@ -181,7 +185,7 @@ export default function EventsHero() {
 
           {/* Subtitle Quote */}
           <p
-            className="text-[15px] sm:text-[17px] md:text-[19px] text-white font-medium max-w-2xl leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]"
+            className="text-[14px] sm:text-[16px] md:text-[18px] text-white font-medium max-w-2xl leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]"
             style={{
               fontFamily: 'var(--font-open-sans), "Open Sans", sans-serif',
             }}
@@ -203,6 +207,7 @@ export default function EventsHero() {
                 src={photo.src}
                 alt={photo.alt}
                 fill
+                unoptimized
                 sizes="(max-width: 640px) 210px, (max-width: 1024px) 260px, 280px"
                 className="object-cover object-center"
               />

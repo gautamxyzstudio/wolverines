@@ -10,7 +10,7 @@ interface GalleryGridProps {
 }
 
 export default function GalleryGrid({ items, onOpenLightbox }: GalleryGridProps) {
-  const [activeTab, setActiveTab] = useState<GalleryCategory>("personal-development");
+  const [activeTab, setActiveTab] = useState<GalleryCategory>("all");
 
   const filteredItems = useMemo(() => {
     if (activeTab === "all") return items;
@@ -83,6 +83,7 @@ export default function GalleryGrid({ items, onOpenLightbox }: GalleryGridProps)
                       src={item.image}
                       alt={item.alt}
                       fill
+                      unoptimized
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                       className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
                     />

@@ -252,7 +252,7 @@ export default function PhoneCountryInput({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Digits only - completely strip letters and non-numeric symbols
+    // Digits only - strictly capped to country's exact max length
     const digitsOnly = e.target.value.replace(/\D/g, "");
     const truncated = digitsOnly.slice(0, currentRule.maxLength);
     onChange(truncated);
@@ -333,7 +333,7 @@ export default function PhoneCountryInput({
           </span>
         </button>
 
-        {/* Number input with numeric only restriction & country max length */}
+        {/* Number input with numeric only restriction & exact country max length */}
         <input
           ref={phoneInputRef}
           type="tel"

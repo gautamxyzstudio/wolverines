@@ -17,12 +17,13 @@ export default function CurvedGalleryHero({
   const [scrollDirection, setScrollDirection] = useState<"left" | "right">("left");
   const [speed, setSpeed] = useState<number>(42); // duration in seconds
 
-  // Use the curated items (repeating 3 times for a completely seamless infinite loop)
-  const marqueeItems = [...items, ...items, ...items];
+  // Use a curated 24-item slice for the marquee for optimal performance
+  const showcaseItems = items.length > 24 ? items.slice(0, 24) : items;
+  const marqueeItems = [...showcaseItems, ...showcaseItems, ...showcaseItems];
 
   return (
     <section className="relative w-full bg-white pt-8 pb-10 sm:pt-12 sm:pb-14 lg:pt-16 lg:pb-16 overflow-hidden select-none">
-      {/* Hidden SVG Definition for the Exact Curved Concave Ribbon Silhouette */}
+      {/* Hidden SVG Definition for the Distinct 3D Curved Ribbon Silhouette */}
       <svg
         width="0"
         height="0"
@@ -33,10 +34,12 @@ export default function CurvedGalleryHero({
         <defs>
           <clipPath id="curved-ribbon-clip" clipPathUnits="objectBoundingBox">
             {/* 
-              Top edge: Starts at (0, 0.04), dips down to (0.5, 0.22), rises to (1, 0.04).
-              Bottom edge: Curves from (1, 0.96) up to (0.5, 0.78), down to (0, 0.96).
+              Distinct 3D concave ribbon curve:
+              Top edge: Starts at (0, 0), dips to (0.5, 0.11), rises to (1, 0).
+              Bottom edge: Curves from (1, 1) up to (0.5, 0.89), down to (0, 1).
+              Preserves 78% of center height while keeping the stylish 3D curved silhouette.
             */}
-            <path d="M 0,0.04 C 0.28,0.22 0.72,0.22 1,0.04 L 1,0.96 C 0.72,0.78 0.28,0.78 0,0.96 Z" />
+            <path d="M 0,0 C 0.28,0.11 0.72,0.11 1,0 L 1,1 C 0.72,0.89 0.28,0.89 0,1 Z" />
           </clipPath>
         </defs>
       </svg>
@@ -60,10 +63,13 @@ export default function CurvedGalleryHero({
       {/* Curved 3D Scrolling Ribbon Showcase */}
       <div className="relative w-full overflow-hidden flex justify-center">
         <div
-          className="animate-gallery-ribbon relative w-full max-w-[1580px] h-[190px] sm:h-[240px] md:h-[280px] lg:h-[310px] flex items-center overflow-hidden"
+          className="animate-gallery-ribbon relative w-full max-w-[1600px] h-[220px] sm:h-[270px] md:h-[310px] lg:h-[350px] flex items-center overflow-hidden"
           style={{
             clipPath: "url(#curved-ribbon-clip)",
             WebkitClipPath: "url(#curved-ribbon-clip)",
+            transform: "translateZ(0)",
+            WebkitBackfaceVisibility: "hidden",
+            backfaceVisibility: "hidden",
           }}
         >
           {/* Inner Scrolling Track */}
@@ -73,22 +79,31 @@ export default function CurvedGalleryHero({
             } ${isPaused ? "animate-gallery-paused" : ""}`}
             style={{
               animationDuration: `${speed}s`,
+              transform: "translateZ(0)",
+              WebkitBackfaceVisibility: "hidden",
+              backfaceVisibility: "hidden",
             }}
           >
             {marqueeItems.map((item, index) => {
-              const actualIndex = index % items.length;
+              const actualIndex = index % showcaseItems.length;
+              const globalIndex = items.findIndex((it) => it.id === item.id);
               return (
                 <div
                   key={`${item.id}-${index}`}
-                  onClick={() => onOpenLightbox(actualIndex)}
-                  className="relative flex-shrink-0 w-[135px] sm:w-[175px] md:w-[210px] lg:w-[235px] h-[190px] sm:h-[240px] md:h-[280px] lg:h-[310px] mr-2 sm:mr-2.5 bg-neutral-900 cursor-pointer overflow-hidden select-none"
+                  onClick={() => onOpenLightbox(globalIndex >= 0 ? globalIndex : actualIndex)}
+                  className="relative flex-shrink-0 w-[155px] sm:w-[195px] md:w-[235px] lg:w-[265px] h-[220px] sm:h-[270px] md:h-[310px] lg:h-[350px] mr-2.5 sm:mr-3.5 bg-neutral-900 cursor-pointer overflow-hidden select-none rounded-lg"
+                  style={{
+                    transform: "translateZ(0)",
+                    WebkitBackfaceVisibility: "hidden",
+                    backfaceVisibility: "hidden",
+                  }}
                 >
                   <Image
                     src={item.image}
                     alt={item.alt}
                     fill
-                    sizes="(max-width: 640px) 140px, (max-width: 1024px) 210px, 240px"
-                    className="object-cover object-center"
+                    unoptimized
+                    className="object-cover object-[center_25%]"
                     priority={index < 8}
                   />
                 </div>
@@ -99,26 +114,26 @@ export default function CurvedGalleryHero({
       </div>
 
       {/* Floating Interactive Controls Bar */}
-      <div className="site-container mt-5 sm:mt-6 flex flex-wrap items-center justify-end gap-3 text-xs sm:text-sm text-neutral-600">
-        {/* Right: Pause/Resume, Direction, Speed controls */}
-        <div className="flex items-center gap-2">
-          {/* Pause / Play Button */}
+      <div className="site-container mt-5 sm:mt-6 flex flex-wrap items-center justify-end gap-2.5 sm:gap-3 text-xs sm:text-sm text-neutral-600">
+        <div className="flex flex-wrap items-center gap-2 bg-white/90 backdrop-blur-md p-1.5 rounded-2xl border border-neutral-200/90 shadow-sm">
+          {/* 1. Play / Pause Switch Toggle */}
           <button
             type="button"
             onClick={() => setIsPaused(!isPaused)}
-            className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-xs ${
               isPaused
-                ? "bg-[#D32F2F] text-white border-[#D32F2F]"
-                : "bg-neutral-100 hover:bg-neutral-200 text-neutral-700 border-neutral-300"
+                ? "bg-[#DE2027] text-white"
+                : "bg-neutral-100 hover:bg-neutral-200 text-neutral-800"
             }`}
             title={isPaused ? "Resume auto-scroll" : "Pause auto-scroll"}
+            aria-label={isPaused ? "Resume auto-scroll" : "Pause auto-scroll"}
           >
             {isPaused ? (
               <>
                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
-                <span>Resume</span>
+                <span>Play</span>
               </>
             ) : (
               <>
@@ -130,33 +145,51 @@ export default function CurvedGalleryHero({
             )}
           </button>
 
-          {/* Direction Toggle */}
-          <button
-            type="button"
-            onClick={() => setScrollDirection(scrollDirection === "left" ? "right" : "left")}
-            className="px-3 py-1.5 rounded-full border border-neutral-300 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5"
-            title="Change scroll direction"
-          >
-            <svg
-              className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                scrollDirection === "right" ? "rotate-180" : ""
-              }`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            <span>{scrollDirection === "left" ? "Scroll Left" : "Scroll Right"}</span>
-          </button>
+          {/* Divider */}
+          <div className="w-[1px] h-4 bg-neutral-200 hidden xs:block" />
 
-          {/* Speed Selector */}
-          <div className="hidden sm:flex items-center gap-1 bg-neutral-100 p-0.5 rounded-full border border-neutral-300 text-[11px]">
+          {/* 2. Direction 2-Way Segmented Switch */}
+          <div className="flex items-center bg-neutral-100 p-0.5 rounded-xl border border-neutral-200 text-xs">
+            <button
+              type="button"
+              onClick={() => setScrollDirection("left")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-1 cursor-pointer ${
+                scrollDirection === "left"
+                  ? "bg-[#DE2027] text-white shadow-xs"
+                  : "text-neutral-600 hover:text-neutral-900"
+              }`}
+              title="Scroll Left"
+            >
+              <span>←</span>
+              <span>Left</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setScrollDirection("right")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-1 cursor-pointer ${
+                scrollDirection === "right"
+                  ? "bg-[#DE2027] text-white shadow-xs"
+                  : "text-neutral-600 hover:text-neutral-900"
+              }`}
+              title="Scroll Right"
+            >
+              <span>Right</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="w-[1px] h-4 bg-neutral-200 hidden sm:block" />
+
+          {/* 3. Speed 3-Way Segmented Switch */}
+          <div className="hidden sm:flex items-center bg-neutral-100 p-0.5 rounded-xl border border-neutral-200 text-xs">
             <button
               type="button"
               onClick={() => setSpeed(55)}
-              className={`px-2 py-1 rounded-full cursor-pointer transition-colors ${
-                speed === 55 ? "bg-white text-[#D32F2F] shadow-xs font-semibold" : "text-neutral-600 hover:text-neutral-900"
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                speed === 55
+                  ? "bg-[#DE2027] text-white shadow-xs"
+                  : "text-neutral-600 hover:text-neutral-900"
               }`}
             >
               Slow
@@ -164,8 +197,10 @@ export default function CurvedGalleryHero({
             <button
               type="button"
               onClick={() => setSpeed(42)}
-              className={`px-2 py-1 rounded-full cursor-pointer transition-colors ${
-                speed === 42 ? "bg-white text-[#D32F2F] shadow-xs font-semibold" : "text-neutral-600 hover:text-neutral-900"
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                speed === 42
+                  ? "bg-[#DE2027] text-white shadow-xs"
+                  : "text-neutral-600 hover:text-neutral-900"
               }`}
             >
               Normal
@@ -173,8 +208,10 @@ export default function CurvedGalleryHero({
             <button
               type="button"
               onClick={() => setSpeed(28)}
-              className={`px-2 py-1 rounded-full cursor-pointer transition-colors ${
-                speed === 28 ? "bg-white text-[#D32F2F] shadow-xs font-semibold" : "text-neutral-600 hover:text-neutral-900"
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                speed === 28
+                  ? "bg-[#DE2027] text-white shadow-xs"
+                  : "text-neutral-600 hover:text-neutral-900"
               }`}
             >
               Fast

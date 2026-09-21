@@ -7,6 +7,7 @@ import PhoneCountryInput, {
   getCountryPhoneRule,
 } from "@/components/ui/PhoneCountryInput";
 import Toast from "@/components/ui/Toast";
+import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import { API_ENDPOINTS } from "@/constants/endpoints";
 
 const GENDERS = ["Male", "Female", "Other"];
@@ -96,6 +97,15 @@ export default function RegistrationForm() {
     }
     if (!dateOfBirth) {
       triggerError("Date of birth is required.");
+      return;
+    }
+    const birthDate = new Date(`${dateOfBirth}T00:00:00`);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    if (age < 3) {
+      triggerError("Child must be at least 3 years old to register.");
       return;
     }
     if (!parentGuardianName.trim()) {
@@ -344,13 +354,14 @@ export default function RegistrationForm() {
                   <label className="block text-xs sm:text-sm font-semibold text-neutral-800 mb-1.5">
                     Date of Birth <span className="text-[#DE2027]">*</span>
                   </label>
-                  <input
-                    type="date"
-                    required
-                    max={new Date().toISOString().split("T")[0]}
+                  <CustomDatePicker
                     value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded border border-neutral-300 bg-white text-sm text-neutral-900 focus:outline-none focus:border-neutral-500 transition"
+                    onChange={setDateOfBirth}
+                    placeholder="YYYY-MM-DD"
+                    required
+                    maxDate={new Date(new Date().getFullYear() - 3, new Date().getMonth(), new Date().getDate())}
+                    minYear={1926}
+                    maxYear={new Date().getFullYear() - 3}
                   />
                 </div>
 

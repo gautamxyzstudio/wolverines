@@ -47,7 +47,8 @@ export default function AboutSection() {
           <h2
             className="text-[20px] sm:text-[24px] md:text-[28px] font-bold leading-none tracking-wider uppercase text-[#181818]"
             style={{
-              fontFamily: 'var(--font-open-sans), "Open Sans", sans-serif',
+                                 fontFamily: 'var(--font-bebas-neue), "Bebas Neue", sans-serif', 
+
               fontWeight: 800,
             }}
           >

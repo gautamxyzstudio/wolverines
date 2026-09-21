@@ -13,7 +13,7 @@ export default function AboutHero() {
   }, []);
 
   return (
-    <section className="relative w-full overflow-hidden select-none flex items-center bg-neutral-900 shadow-2xl min-h-[460px] sm:min-h-[520px] lg:min-h-[580px]">
+    <section className="relative w-full overflow-hidden select-none flex items-start lg:items-center bg-neutral-900 shadow-2xl min-h-[460px] sm:min-h-[520px] lg:min-h-[580px]">
       {/* 1. Abbotsford Hockey Field Background Image - Full-Bleed */}
       <div
         className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none transition-all duration-1000 ease-out ${
@@ -28,11 +28,12 @@ export default function AboutHero() {
           className="object-cover object-[center_35%] filter blur-[2px]"
         />
         {/* Subtle mobile readability vignette */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent lg:hidden pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent lg:hidden pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent lg:hidden pointer-events-none" />
       </div>
 
       {/* 2. Visual Graphics & Content Container - site-container */}
-      <div className="site-container relative z-30 w-full h-full flex items-center min-h-[460px] sm:min-h-[520px] lg:min-h-[580px] py-10 sm:py-12 lg:py-0">
+      <div className="site-container relative z-30 w-full h-full flex items-start lg:items-center min-h-[460px] sm:min-h-[520px] lg:min-h-[580px] pt-7 pb-10 sm:pt-10 sm:pb-12 lg:py-0">
         {/* Left Dark Stripe */}
         <div
           className="hidden lg:block absolute pointer-events-none z-10"

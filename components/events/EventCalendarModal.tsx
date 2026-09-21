@@ -1,11 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  allCalendarEvents,
-  getEventsForDate,
-  CalendarEventItem,
-} from "./calendarEventsData";
+import { API_ENDPOINTS } from "@/constants/endpoints";
+import { CalendarEventItem } from "./calendarEventsData";
 
 interface EventCalendarModalProps {
   isOpen: boolean;
@@ -33,36 +30,159 @@ export default function EventCalendarModal({
   isOpen,
   onClose,
 }: EventCalendarModalProps) {
-  // Default to October 2026 as shown in the mockup
-  const [currentYear, setCurrentYear] = useState<number>(2026);
-  const [currentMonth, setCurrentMonth] = useState<number>(9); // 9 = October (0-indexed)
-  const [selectedDay, setSelectedDay] = useState<number | null>(5); // Default selected to Oct 5
+  const [events, setEvents] = useState<CalendarEventItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState<number>(new Date().getMonth());
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [activeEvents, setActiveEvents] = useState<CalendarEventItem[]>([]);
+
+  // Fetch real events from /api/event whenever modal is opened
+  useEffect(() => {
+    if (!isOpen) return;
+
+    async function loadEvents() {
+      setIsLoading(true);
+      try {
+        const res = await fetch(API_ENDPOINTS.EVENT);
+        if (res.ok) {
+          const json = await res.json();
+          if (Array.isArray(json.data) && json.data.length > 0) {
+            const parsed: CalendarEventItem[] = json.data
+              .map((item: any) => {
+                const d = new Date(item.date);
+                if (isNaN(d.getTime())) return null;
+
+                const year = d.getUTCFullYear();
+                const month = d.getUTCMonth(); // 0-indexed
+                const day = d.getUTCDate();
+
+                const dateString = d
+                  .toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                    timeZone: "UTC",
+                  })
+                  .toUpperCase();
+
+                const formatSingleTime = (val?: string | Date) => {
+                  if (!val) return "";
+                  try {
+                    const td = new Date(val);
+                    if (!isNaN(td.getTime())) {
+                      return td.toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                        timeZone: "UTC",
+                      });
+                    }
+                    return String(val);
+                  } catch {
+                    return String(val);
+                  }
+                };
+
+                const start = formatSingleTime(item.startTime);
+                const end = formatSingleTime(item.endTime);
+                const time =
+                  start && end
+                    ? `${start} to ${end}`
+                    : start || end || "05:00 PM to 07:00 PM";
+
+                return {
+                  id: item.id,
+                  title: "Indoor Practice Session",
+                  type: "practice" as const,
+                  dateString,
+                  year,
+                  month,
+                  day,
+                  location: item.location || "32470 Haida Dr. Abbotsford",
+                  time,
+                };
+              })
+              .filter(Boolean) as CalendarEventItem[];
+
+            // Sort chronologically
+            parsed.sort((a, b) => {
+              if (a.year !== b.year) return a.year - b.year;
+              if (a.month !== b.month) return a.month - b.month;
+              return a.day - b.day;
+            });
+
+            setEvents(parsed);
+
+            if (parsed.length > 0) {
+              // Open to the month of the first scheduled event
+              setCurrentYear(parsed[0].year);
+              setCurrentMonth(parsed[0].month);
+              setSelectedDay(parsed[0].day);
+            }
+          } else {
+            setEvents([]);
+            setSelectedDay(null);
+          }
+        } else {
+          setEvents([]);
+          setSelectedDay(null);
+        }
+      } catch (err) {
+        console.error("Error fetching events for calendar modal:", err);
+        setEvents([]);
+        setSelectedDay(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadEvents();
+  }, [isOpen]);
 
   // Update active events when year, month or selectedDay changes
   useEffect(() => {
     if (selectedDay !== null) {
-      const events = getEventsForDate(currentYear, currentMonth, selectedDay);
-      setActiveEvents(events);
+      const filtered = events.filter(
+        (e) =>
+          e.year === currentYear &&
+          e.month === currentMonth &&
+          e.day === selectedDay
+      );
+      setActiveEvents(filtered);
     } else {
       setActiveEvents([]);
     }
-  }, [currentYear, currentMonth, selectedDay]);
+  }, [currentYear, currentMonth, selectedDay, events]);
 
-  // Handle ESC key press to close modal
+  const panelRef = React.useRef<HTMLDivElement>(null);
+
+  // Close on ESC key or clicking outside the calendar panel (non-blocking)
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
       }
     };
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
-    }
+
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("#sticky-calendar-btn")) return;
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    // Note: Do not lock document.body.style.overflow so the background page
+    // remains completely scrollable and interactive.
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "auto";
+      document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [isOpen, onClose]);
 
@@ -70,23 +190,45 @@ export default function EventCalendarModal({
 
   // Month navigation
   const handlePrevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear((prev) => prev - 1);
-    } else {
-      setCurrentMonth((prev) => prev - 1);
+    let newMonth = currentMonth - 1;
+    let newYear = currentYear;
+    if (newMonth < 0) {
+      newMonth = 11;
+      newYear -= 1;
     }
-    setSelectedDay(null);
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+
+    // Auto-select event if exists in previous month
+    const inMonth = events.filter(
+      (e) => e.year === newYear && e.month === newMonth
+    );
+    if (inMonth.length > 0) {
+      setSelectedDay(inMonth[0].day);
+    } else {
+      setSelectedDay(null);
+    }
   };
 
   const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear((prev) => prev + 1);
-    } else {
-      setCurrentMonth((prev) => prev + 1);
+    let newMonth = currentMonth + 1;
+    let newYear = currentYear;
+    if (newMonth > 11) {
+      newMonth = 0;
+      newYear += 1;
     }
-    setSelectedDay(null);
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+
+    // Auto-select event if exists in next month
+    const inMonth = events.filter(
+      (e) => e.year === newYear && e.month === newMonth
+    );
+    if (inMonth.length > 0) {
+      setSelectedDay(inMonth[0].day);
+    } else {
+      setSelectedDay(null);
+    }
   };
 
   // Calendar calculations
@@ -97,28 +239,26 @@ export default function EventCalendarModal({
   const daySlots = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs transition-opacity duration-200 select-none"
-      onClick={onClose}
+    <aside
+      ref={panelRef}
+      role="dialog"
+      aria-label="Event Calendar"
+      style={{ right: "max(12px, calc((100vw - 1280px) / 2 + 16px))" }}
+      className="fixed top-1/2 -translate-y-1/2 z-50 w-[calc(100vw-24px)] sm:w-[410px] max-w-[420px] max-h-[88vh] bg-white rounded-2xl sm:rounded-3xl shadow-[-12px_16px_45px_rgba(0,0,0,0.25)] border border-neutral-200/90 flex flex-col overflow-hidden select-none transition-all duration-300"
     >
-      {/* Modal Container */}
-      <div
-        className="w-full max-w-[420px] sm:max-w-[440px] bg-white rounded-3xl overflow-hidden shadow-2xl border border-neutral-100 flex flex-col transition-all transform duration-200"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Dark Top Header Bar */}
-        <div className="bg-[#181818] px-6 py-4 sm:py-5 flex items-center justify-between text-white border-b border-neutral-800">
+      {/* Red Top Header Bar */}
+      <div className="bg-[#DE2027] px-5 sm:px-6 py-4 flex items-center justify-between text-white border-b border-[#C11B22] shrink-0">
           <div>
             <h3
-              className="text-2xl sm:text-[26px] font-black uppercase tracking-wider leading-none text-white"
+              className="text-2xl sm:text-[26px] font-black uppercase tracking-wider leading-none text-white drop-shadow-xs"
               style={{
                 fontFamily: 'var(--font-bebas-neue), "Bebas Neue", sans-serif',
               }}
             >
               EVENT CALENDAR
             </h3>
-            <p className="text-xs text-neutral-400 font-medium tracking-normal mt-1">
-              Upcoming Events &amp; Matches
+            <p className="text-xs text-white/90 font-medium tracking-normal mt-1">
+              Indoor Practice &amp; Match Schedule
             </p>
           </div>
 
@@ -127,7 +267,7 @@ export default function EventCalendarModal({
             type="button"
             onClick={onClose}
             aria-label="Close Calendar"
-            className="w-9 h-9 rounded-full bg-neutral-800/90 hover:bg-neutral-700 text-neutral-300 hover:text-white flex items-center justify-center transition border border-neutral-700 active:scale-95 cursor-pointer"
+            className="w-9 h-9 rounded-full bg-black/20 hover:bg-black/35 text-white flex items-center justify-center transition border border-white/25 active:scale-95 cursor-pointer"
           >
             <svg
               className="w-4 h-4"
@@ -144,6 +284,8 @@ export default function EventCalendarModal({
           </button>
         </div>
 
+      {/* Scrollable Calendar Body */}
+      <div className="overflow-y-auto flex-1 overscroll-contain">
         {/* White Calendar Area */}
         <div className="p-5 sm:p-6 bg-white">
           {/* Month / Year Navigator */}
@@ -217,15 +359,16 @@ export default function EventCalendarModal({
 
             {/* Days in Month */}
             {daySlots.map((day) => {
-              const dayEvents = getEventsForDate(
-                currentYear,
-                currentMonth,
-                day
+              const dayEvents = events.filter(
+                (e) =>
+                  e.year === currentYear &&
+                  e.month === currentMonth &&
+                  e.day === day
               );
-              const hasMatch = dayEvents.length > 0;
+              const hasEvent = dayEvents.length > 0;
               const isSelected = selectedDay === day;
 
-              if (hasMatch) {
+              if (hasEvent) {
                 return (
                   <button
                     key={day}
@@ -268,12 +411,17 @@ export default function EventCalendarModal({
 
         {/* Selected Day Info Card / Details */}
         <div className="bg-neutral-50 border-t border-neutral-100 px-5 sm:px-6 py-4">
-          {selectedDay !== null && activeEvents.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-4 text-xs text-neutral-500 flex items-center justify-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#DE2027] animate-ping" />
+              Loading schedule...
+            </div>
+          ) : selectedDay !== null && activeEvents.length > 0 ? (
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#DE2027] uppercase tracking-wider">
                   <span className="w-2 h-2 rounded-full bg-[#DE2027] animate-pulse" />
-                  Match / Practice Scheduled
+                  Practice Scheduled
                 </span>
                 <span className="text-xs text-neutral-500 font-semibold">
                   {MONTH_NAMES[currentMonth].slice(0, 3)} {selectedDay},{" "}
@@ -322,19 +470,23 @@ export default function EventCalendarModal({
             </div>
           ) : selectedDay !== null ? (
             <div className="text-center py-2 text-xs text-neutral-500">
-              No matches scheduled on {MONTH_NAMES[currentMonth].slice(0, 3)}{" "}
+              No sessions scheduled on {MONTH_NAMES[currentMonth].slice(0, 3)}{" "}
               {selectedDay}, {currentYear}. Check dates with the{" "}
               <span className="text-[#DE2027] font-semibold">red dot</span>.
             </div>
-          ) : (
+          ) : events.length > 0 ? (
             <div className="text-center py-2 text-xs text-neutral-500">
               Click any date with a{" "}
               <span className="text-[#DE2027] font-semibold">red dot</span> to
-              view match details.
+              view practice details.
+            </div>
+          ) : (
+            <div className="text-center py-2 text-xs text-neutral-500">
+              No practice sessions currently scheduled.
             </div>
           )}
         </div>
       </div>
-    </div>
+    </aside>
   );
 }
