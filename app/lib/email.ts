@@ -60,6 +60,33 @@ export interface JoinOurClubData {
   message?: string;
 }
 
+function calculateAge(
+  dateOfBirth: string | Date | null | undefined,
+): number | null {
+  if (!dateOfBirth) return null;
+
+  const dob = new Date(dateOfBirth);
+
+  if (Number.isNaN(dob.getTime())) {
+    return null;
+  }
+
+  const today = new Date();
+
+  let age = today.getFullYear() - dob.getFullYear();
+
+  const monthDifference = today.getMonth() - dob.getMonth();
+
+  if (
+    monthDifference < 0 ||
+    (monthDifference === 0 && today.getDate() < dob.getDate())
+  ) {
+    age--;
+  }
+
+  return age >= 0 ? age : null;
+}
+
 // ----------------------------------------------------------------------
 // User & Admin HTML Email Shells
 // ----------------------------------------------------------------------
@@ -772,18 +799,35 @@ export async function sendCampRegistrationNotification(
       ? JSON.parse(registration.children || "[]")
       : [];
 
-  const childrenRows = childrenList
-    .map(
-      (c: any, index: number) => `
+const childrenRows = childrenList
+  .map((c: any, index: number) => {
+    const age =
+      c.age ??
+      calculateAge(c.dateOfBirth) ??
+      calculateAge(c.dob);
+
+    return `
       <tr style="border-bottom: 1px solid #e5e7eb;">
-        <td style="padding: 10px 12px; font-weight: 600; color: #111827;">${index + 1}. ${c.name || c.childName || "Child"}</td>
-        <td style="padding: 10px 12px; color: #4b5563;">${c.age ? `${c.age} yrs` : "N/A"} (${c.gender || "N/A"})</td>
-        <td style="padding: 10px 12px; color: #4b5563;">${c.experienceLevel || "N/A"}</td>
-        <td style="padding: 10px 12px; color: #16a34a; font-weight: 700; text-align: right;">${c.fee ? `$${c.fee}` : "-"}</td>
+        <td style="padding: 10px 12px; font-weight: 600; color: #111827;">
+          ${index + 1}. ${c.name || c.childName || "Child"}
+        </td>
+
+        <td style="padding: 10px 12px; color: #4b5563;">
+          ${age !== null && age !== undefined ? `${age} yrs` : "N/A"}
+          (${c.gender || "N/A"})
+        </td>
+
+        <td style="padding: 10px 12px; color: #4b5563;">
+          ${c.experienceLevel || "N/A"}
+        </td>
+
+        <td style="padding: 10px 12px; color: #16a34a; font-weight: 700; text-align: right;">
+          ${c.fee ? `$${c.fee}` : "-"}
+        </td>
       </tr>
-    `,
-    )
-    .join("");
+    `;
+  })
+  .join("");
 
   const formattedTotal = Number(registration.totalAmount || 0).toFixed(2);
   const campName =
@@ -1096,7 +1140,7 @@ export async function sendDonationThankYou({
     title: "Thank You for Supporting The Wolverines",
     preheader: `Thank you for your generous gift of ${currency.toUpperCase()} $${formattedAmount}`,
     badgeText: "Official Donation Receipt",
-    badgeBg: "#D32F2F",
+    badgeBg: "#B50016",
     contentHtml: `
       <div style="margin-bottom: 24px;">
         <h2 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 800; color: #111827;">
