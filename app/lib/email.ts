@@ -816,14 +816,6 @@ const childrenRows = childrenList
           ${age !== null && age !== undefined ? `${age} yrs` : "N/A"}
           (${c.gender || "N/A"})
         </td>
-
-        <td style="padding: 10px 12px; color: #4b5563;">
-          ${c.experienceLevel || "N/A"}
-        </td>
-
-        <td style="padding: 10px 12px; color: #16a34a; font-weight: 700; text-align: right;">
-          ${c.fee ? `$${c.fee}` : "-"}
-        </td>
       </tr>
     `;
   })
@@ -893,8 +885,6 @@ const childrenRows = childrenList
           <tr style="background-color: #f3f4f6; color: #4b5563; font-size: 11px; text-transform: uppercase;">
             <th style="padding: 8px 12px; text-align: left;">Athlete Name</th>
             <th style="padding: 8px 12px; text-align: left;">Age / Gender</th>
-            <th style="padding: 8px 12px; text-align: left;">Experience</th>
-            <th style="padding: 8px 12px; text-align: right;">Fee</th>
           </tr>
         </thead>
         <tbody>
@@ -992,17 +982,27 @@ export async function sendCampParentConfirmation(
       ? JSON.parse(registration.children || "[]")
       : [];
 
-  const childrenRows = childrenList
-    .map(
-      (c: any, index: number) => `
+ const childrenRows = childrenList
+  .map((c: any, index: number) => {
+    const age =
+      c.age ??
+      calculateAge(c.dateOfBirth) ??
+      calculateAge(c.dob);
+
+    return `
       <tr style="border-bottom: 1px solid #e5e7eb;">
-        <td style="padding: 10px 12px; font-weight: 700; color: #111827;">${index + 1}. ${c.name || c.childName || "Athlete"}</td>
-        <td style="padding: 10px 12px; color: #4b5563;">${c.age ? `${c.age} yrs` : "N/A"}</td>
-        <td style="padding: 10px 12px; color: #4b5563;">${c.experienceLevel || "All Levels"}</td>
+        <td style="padding: 10px 12px; font-weight: 600; color: #111827;">
+          ${index + 1}. ${c.name || c.childName || "Child"}
+        </td>
+
+        <td style="padding: 10px 12px; color: #4b5563;">
+          ${age !== null && age !== undefined ? `${age} yrs` : "N/A"}
+          (${c.gender || "N/A"})
+        </td>
       </tr>
-    `,
-    )
-    .join("");
+    `;
+  })
+  .join("");
 
   const formattedTotal = Number(registration.totalAmount || 0).toFixed(2);
   const campName =
@@ -1053,7 +1053,6 @@ export async function sendCampParentConfirmation(
           <tr style="background-color: #f9fafb; color: #6b7280; font-size: 11px; text-transform: uppercase;">
             <th style="padding: 8px 12px; text-align: left;">Athlete Name</th>
             <th style="padding: 8px 12px; text-align: left;">Age</th>
-            <th style="padding: 8px 12px; text-align: left;">Program Tier</th>
           </tr>
         </thead>
         <tbody>
