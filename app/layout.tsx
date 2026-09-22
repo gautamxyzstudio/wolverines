@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Open_Sans, Bebas_Neue } from "next/font/google";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import GlobalPreloader from "@/components/layout/GlobalPreloader";
 import "./globals.css";
 
 const openSans = Open_Sans({
@@ -36,6 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${openSans.variable} ${bebasNeue.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-white text-neutral-900">
+        <GlobalPreloader />
         <Navbar />
         <main className="flex-1 flex flex-col">{children}</main>
         <Footer />
