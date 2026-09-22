@@ -15,8 +15,8 @@ const quickLinks = [
   { label: "Registration", href: "/registration" },
   { label: "Donation", href: "/donation" },
   { label: "Contact Us", href: "/contact" },
-  { label: "Summer Program", href: "/summer-program" },
-  { label: "Winter Program", href: "/winter-program" },
+  // { label: "Summer Program", href: "/summer-program" },
+  // { label: "Winter Program", href: "/winter-program" },
 ];
 
 export default function Footer() {

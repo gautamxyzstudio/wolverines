@@ -321,32 +321,6 @@ export default function DonationForm() {
               </div>
             </div>
 
-            {/* Secure Payment via Stripe Notice */}
-            <div className="rounded-xl border border-neutral-200 bg-neutral-50/80 p-5 sm:p-6 space-y-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2 text-neutral-800 font-semibold text-sm">
-                  <span className="text-emerald-600 text-base">🔒</span>
-                  <span>Secure Payment via Stripe</span>
-                </div>
-                <div className="flex items-center gap-1.5 select-none">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#1A1F71] text-white tracking-tighter">
-                    VISA
-                  </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EB001B] text-white tracking-tighter">
-                    MC
-                  </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#006FCF] text-white tracking-tighter">
-                    AMEX
-                  </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FF5F00] text-white tracking-tighter">
-                    DISC
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs text-neutral-500 leading-relaxed">
-                When you click Donate, you will be redirected to the official Stripe Checkout portal to complete your transaction securely via Credit Card, Apple Pay, or Google Pay.
-              </p>
-            </div>
 
             {/* Donate Button */}
             <div className="pt-2">

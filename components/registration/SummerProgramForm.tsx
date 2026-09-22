@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Toast from "@/components/ui/Toast";
@@ -331,21 +331,13 @@ export default function SummerProgramForm() {
         </div>
       )}
 
-      {/* 1. Top Graphic Banner: SMALL PLAYERS BIG DREAMS */}
-      <div className="w-full relative overflow-hidden bg-white">
-        <div className="site-container px-0 sm:px-4">
-          <div className="w-full relative h-[140px] sm:h-[220px] md:h-[280px] lg:h-[340px] overflow-hidden rounded-none sm:rounded-xl">
-            <Image
-              src="/images/summer_program_banner.png"
-              alt="Small Players Big Dreams - Wolverines Summer Program Banner"
-              fill
-              priority
-              className="object-cover object-center"
-              sizes="100vw"
-            />
-          </div>
-        </div>
-      </div>
+      {/* 1. Auto-Sliding Banner */}
+      <BannerSlider
+        slides={[
+          { src: "/images/Slider_one.webp",         alt: "Wolverines Summer Program - Slide 1" },
+          { src: "/images/Slider_two-300x109.webp",  alt: "Wolverines Summer Program - Slide 2" },
+        ]}
+      />
 
       {/* 2. Main Title */}
       <div className="site-container">
@@ -739,6 +731,61 @@ export default function SummerProgramForm() {
             </div>
           </form>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── Reusable Banner Slider ────────────────────────────────────────────────
+function BannerSlider({ slides }: { slides: { src: string; alt: string }[] }) {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActive((prev) => (prev + 1) % slides.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  return (
+    <div className="w-full bg-white overflow-hidden">
+      <div className="relative w-full">
+        {slides.map((slide, i) => (
+          <div
+            key={i}
+            style={{
+              position: i === 0 ? "relative" : "absolute",
+              inset: 0,
+              opacity: i === active ? 1 : 0,
+              transition: "opacity 0.7s ease",
+              zIndex: i === active ? 2 : 1,
+            }}
+          >
+            <Image
+              src={slide.src}
+              alt={slide.alt}
+              width={1920}
+              height={700}
+              priority={i === 0}
+              unoptimized
+              style={{ width: "100%", height: "auto", display: "block" }}
+            />
+          </div>
+        ))}
+        {/* Dot indicators */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setActive(i)}
+              className={`rounded-full transition-all duration-300 cursor-pointer ${
+                i === active ? "w-6 h-2 bg-white" : "w-2 h-2 bg-white/50"
+              }`}
+              aria-label={`Slide ${i + 1}`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

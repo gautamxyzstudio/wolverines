@@ -74,9 +74,8 @@ export default function CurvedGalleryHero({
         >
           {/* Inner Scrolling Track */}
           <div
-            className={`flex items-center ${
-              scrollDirection === "left" ? "animate-gallery-left" : "animate-gallery-right"
-            } ${isPaused ? "animate-gallery-paused" : ""}`}
+            className={`flex items-center ${scrollDirection === "left" ? "animate-gallery-left" : "animate-gallery-right"
+              } ${isPaused ? "animate-gallery-paused" : ""}`}
             style={{
               animationDuration: `${speed}s`,
               transform: "translateZ(0)",
@@ -120,11 +119,10 @@ export default function CurvedGalleryHero({
           <button
             type="button"
             onClick={() => setIsPaused(!isPaused)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-xs ${
-              isPaused
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-xs ${isPaused
                 ? "bg-[#DE2027] text-white"
                 : "bg-neutral-100 hover:bg-neutral-200 text-neutral-800"
-            }`}
+              }`}
             title={isPaused ? "Resume auto-scroll" : "Pause auto-scroll"}
             aria-label={isPaused ? "Resume auto-scroll" : "Pause auto-scroll"}
           >
@@ -153,11 +151,10 @@ export default function CurvedGalleryHero({
             <button
               type="button"
               onClick={() => setScrollDirection("left")}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-1 cursor-pointer ${
-                scrollDirection === "left"
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-1 cursor-pointer ${scrollDirection === "left"
                   ? "bg-[#DE2027] text-white shadow-xs"
                   : "text-neutral-600 hover:text-neutral-900"
-              }`}
+                }`}
               title="Scroll Left"
             >
               <span>←</span>
@@ -166,11 +163,10 @@ export default function CurvedGalleryHero({
             <button
               type="button"
               onClick={() => setScrollDirection("right")}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-1 cursor-pointer ${
-                scrollDirection === "right"
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-1 cursor-pointer ${scrollDirection === "right"
                   ? "bg-[#DE2027] text-white shadow-xs"
                   : "text-neutral-600 hover:text-neutral-900"
-              }`}
+                }`}
               title="Scroll Right"
             >
               <span>Right</span>
@@ -186,33 +182,30 @@ export default function CurvedGalleryHero({
             <button
               type="button"
               onClick={() => setSpeed(55)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
-                speed === 55
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${speed === 55
                   ? "bg-[#DE2027] text-white shadow-xs"
                   : "text-neutral-600 hover:text-neutral-900"
-              }`}
+                }`}
             >
               Slow
             </button>
             <button
               type="button"
               onClick={() => setSpeed(42)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
-                speed === 42
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${speed === 42
                   ? "bg-[#DE2027] text-white shadow-xs"
                   : "text-neutral-600 hover:text-neutral-900"
-              }`}
+                }`}
             >
               Normal
             </button>
             <button
               type="button"
               onClick={() => setSpeed(28)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
-                speed === 28
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${speed === 28
                   ? "bg-[#DE2027] text-white shadow-xs"
                   : "text-neutral-600 hover:text-neutral-900"
-              }`}
+                }`}
             >
               Fast
             </button>

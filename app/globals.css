@@ -268,3 +268,74 @@ input[type="number"] {
   mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
   -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
 }
+
+/* ── Banner Auto-Slider (2 slides, 4s each, 8s total loop) ─────────────── */
+@keyframes banner-slide-1 {
+  0%,  45%  { opacity: 1;  z-index: 2; }
+  50%, 95%  { opacity: 0;  z-index: 1; }
+  100%      { opacity: 1;  z-index: 2; }
+}
+
+@keyframes banner-slide-2 {
+  0%,  45%  { opacity: 0;  z-index: 1; }
+  50%, 95%  { opacity: 1;  z-index: 2; }
+  100%      { opacity: 0;  z-index: 1; }
+}
+
+.animate-banner-slide-1 {
+  animation: banner-slide-1 8s ease-in-out infinite;
+}
+
+.animate-banner-slide-2 {
+  animation: banner-slide-2 8s ease-in-out infinite;
+}
+
+/* Dot indicators sync with slides */
+@keyframes dot-active-1 {
+  0%,  45%  { opacity: 1;  transform: scale(1.25); }
+  50%, 95%  { opacity: 0.35; transform: scale(1); }
+  100%      { opacity: 1;  transform: scale(1.25); }
+}
+
+@keyframes dot-active-2 {
+  0%,  45%  { opacity: 0.35; transform: scale(1); }
+  50%, 95%  { opacity: 1;  transform: scale(1.25); }
+  100%      { opacity: 0.35; transform: scale(1); }
+}
+
+.animate-dot-1 {
+  animation: dot-active-1 8s ease-in-out infinite;
+}
+
+.animate-dot-2 {
+  animation: dot-active-2 8s ease-in-out infinite;
+}
+
+/* Seasonal Particle Float Animations */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(12deg); }
+}
+
+@keyframes float-medium {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-9px) rotate(-8deg); }
+  66% { transform: translateY(-4px) rotate(6deg); }
+}
+
+@keyframes float-fast {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-7px) scale(1.1); }
+}
+
+.animate-float-slow {
+  animation: float-slow 5s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float-medium 3.5s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-fast 2.2s ease-in-out infinite;
+}

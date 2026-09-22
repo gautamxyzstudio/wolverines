@@ -38,7 +38,7 @@ export default function UpcomingEventsSection() {
           }`}
           style={{
             backgroundImage:
-              "linear-gradient(rgba(0, 0, 0, 0.74), rgba(0, 0, 0, 0.84)), url('/gallery_img/tournament3-1536x1024.webp')",
+              "linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.45)), url('/gallery_img/tournament3-1536x1024.webp')",
             backgroundAttachment: "fixed",
             backgroundPosition: "center",
             backgroundSize: "cover",
