@@ -97,7 +97,10 @@ export default function IndoorPracticeSchedule() {
   }, []);
 
   return (
-    <section className="w-full bg-white py-12 sm:py-16 lg:py-20 select-none relative">
+    <section
+      id="indoor-practice-schedule-section"
+      className="w-full bg-white py-12 sm:py-16 lg:py-20 select-none relative"
+    >
       <div className="site-container">
         {/* Centered Section Heading matching user screenshot */}
         <div className="text-center mb-10 sm:mb-14">

@@ -174,7 +174,7 @@ export default function EventsHero() {
         >
           {/* Main Title */}
           <h1
-            className="text-[46px] sm:text-[62px] md:text-[76px] lg:text-[88px] font-normal leading-none tracking-wider text-white uppercase drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)] mb-1.5 sm:mb-2"
+            className="text-[64px] sm:text-[96px] md:text-[128px] lg:text-[156px] font-normal leading-none text-white uppercase drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)] mb-2 sm:mb-3"
             style={{
               fontFamily: 'var(--font-bebas-neue), "Bebas Neue", sans-serif',
               fontWeight: 400,
@@ -196,7 +196,10 @@ export default function EventsHero() {
       </section>
 
       {/* Infinite Auto-Scrolling Photo Row - Full viewport width */}
-      <div className="relative w-full overflow-hidden pt-8 sm:pt-10 pb-6 sm:pb-8">
+      <div
+        id="events-scrolling-photos"
+        className="relative w-full overflow-hidden pt-8 sm:pt-10 pb-6 sm:pb-8"
+      >
         <div className="events-autoscroll-track gap-4 sm:gap-5 md:gap-6 py-2">
           {loopPhotos.map((photo, index) => (
             <div
