@@ -3,34 +3,41 @@ import { AuthError, requireAdmin } from "@/app/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
-import { RouterContext } from "next/dist/shared/lib/router-context.shared-runtime";
-import { updateCapturedSPAToTree } from "next/dist/client/components/segment-cache/navigation-testing-lock";
 
-type RouterContext = {
+type RouteContext = {
   params: Promise<{
-    id: string;
+    slug: string;
   }>;
 };
 
-// find by id
+// find by slug
 
-export async function GET(request: NextRequest, context: RouterContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const { id } = await context.params;
-    if (!id) {
+    const { slug } = await context.params;
+    if (!slug) {
       return NextResponse.json(
         {
-          message: "id is required to find blog",
+          message: "slug is required to find blog",
         },
         { status: 400 },
       );
     }
 
-    const blog = await prisma.blog.findUnique({
+    let blog = await prisma.blog.findUnique({
       where: {
-        id,
+        slug,
       },
     });
+
+    if (!blog) {
+      // Fallback in case id was passed
+      blog = await prisma.blog.findUnique({
+        where: {
+          id: slug,
+        },
+      });
+    }
 
     if (!blog) {
       return NextResponse.json(
@@ -61,26 +68,34 @@ export async function GET(request: NextRequest, context: RouterContext) {
 
 // delete
 
-export async function DELETE(request: NextRequest, context: RouterContext) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     await requireAdmin(request);
 
-    const { id } = await context.params;
+    const { slug } = await context.params;
 
-    if (!id) {
+    if (!slug) {
       return NextResponse.json(
         {
-          message: "id is required to delete blog",
+          message: "id or slug is required to delete blog",
         },
         { status: 400 },
       );
     }
 
-    const existing = await prisma.blog.findUnique({
+    let existing = await prisma.blog.findUnique({
       where: {
-        id,
+        id: slug,
       },
     });
+
+    if (!existing) {
+      existing = await prisma.blog.findUnique({
+        where: {
+          slug,
+        },
+      });
+    }
 
     if (!existing) {
       return NextResponse.json(
@@ -93,7 +108,7 @@ export async function DELETE(request: NextRequest, context: RouterContext) {
 
     const deleted = await prisma.blog.delete({
       where: {
-        id,
+        id: existing.id,
       },
     });
 
@@ -143,29 +158,37 @@ export async function DELETE(request: NextRequest, context: RouterContext) {
 
 export async function PUT(
   request: NextRequest,
-  context: RouterContext,
+  context: RouteContext,
 ) {
   let newUploadedFilePath: string | undefined;
 
   try {
     await requireAdmin(request);
 
-    const { id } = await context.params;
+    const { slug } = await context.params;
 
-    if (!id) {
+    if (!slug) {
       return NextResponse.json(
         {
-          message: "id is required to update blog",
+          message: "id or slug is required to update blog",
         },
         { status: 400 },
       );
     }
 
-    const existingBlog = await prisma.blog.findUnique({
+    let existingBlog = await prisma.blog.findUnique({
       where: {
-        id,
+        id: slug,
       },
     });
+
+    if (!existingBlog) {
+      existingBlog = await prisma.blog.findUnique({
+        where: {
+          slug,
+        },
+      });
+    }
 
     if (!existingBlog) {
       return NextResponse.json(
@@ -183,7 +206,7 @@ export async function PUT(
     const featuredImage = formData.get("featuredImage");
     const metaTitle = formData.get("metaTitle");
     const metaDescription = formData.get("metaDescription");
-    const slug = formData.get("slug");
+    const newSlug = formData.get("slug");
     const date = formData.get("date");
     const shortDescription =
       formData.get("shortDescription");
@@ -234,10 +257,10 @@ export async function PUT(
     }
 
     // SLUG
-    if (slug !== null) {
+    if (newSlug !== null) {
       if (
-        typeof slug !== "string" ||
-        !slug.trim()
+        typeof newSlug !== "string" ||
+        !newSlug.trim()
       ) {
         return NextResponse.json(
           {
@@ -249,7 +272,7 @@ export async function PUT(
 
       const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-      if (!slugRegex.test(slug.trim())) {
+      if (!slugRegex.test(newSlug.trim())) {
         return NextResponse.json(
           {
             message:
@@ -259,11 +282,11 @@ export async function PUT(
         );
       }
 
-      if (slug.trim() !== existingBlog.slug) {
+      if (newSlug.trim() !== existingBlog.slug) {
         const duplicateBlog =
           await prisma.blog.findUnique({
             where: {
-              slug: slug.trim(),
+              slug: newSlug.trim(),
             },
           });
 
@@ -278,7 +301,7 @@ export async function PUT(
         }
       }
 
-      updateData.slug = slug.trim();
+      updateData.slug = newSlug.trim();
     }
 
     // DATE
@@ -423,7 +446,7 @@ export async function PUT(
 
     const updatedBlog = await prisma.blog.update({
       where: {
-        id,
+        id: existingBlog.id,
       },
       data: updateData,
     });

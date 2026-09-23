@@ -13,25 +13,21 @@ export async function GET(request: NextRequest) {
             orderBy: {
                 createdAt: "desc"
             },
-            select:{
-                id:true,
-                title:true,
-                featuredImage:true,
-                date:true,
-                shortDescription:true,
+            select: {
+                id: true,
+                title: true,
+                slug: true,
+                featuredImage: true,
+                date: true,
+                shortDescription: true,
+                createdAt: true,
             }
-        })
-
-        if (!blogs) {
-            return NextResponse.json({
-                message: "blogs not found",
-            }, { status: 404 })
-        }
+        });
 
         return NextResponse.json({
             message: "blogs fetched successfully",
-            data: blogs
-        })
+            data: blogs || []
+        });
     } catch (error) {
         console.log("Error fetching blogs", error);
         return NextResponse.json({

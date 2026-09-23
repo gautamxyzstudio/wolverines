@@ -5,6 +5,7 @@ export const API_ENDPOINTS = {
   EVENT: "/api/event",
   PENDING_SUMMER_CAMP: "/api/pending-summer-camp",
   PENDING_WINTER_CAMP: "/api/pending-winter-camp",
+  BLOG: "/api/blog",
 } as const;
 
 export default API_ENDPOINTS;

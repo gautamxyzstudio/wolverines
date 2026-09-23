@@ -364,6 +364,15 @@ export default function BlogsManagementPage() {
                   </div>
 
                   <div className="flex items-center gap-1.5">
+                    <a
+                      href={`/blogs/${blog.slug || blog.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="View live blog post"
+                      className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </a>
                     <button
                       onClick={() => handleOpenEdit(blog)}
                       title="Edit blog post"
