@@ -247,7 +247,7 @@ export default function RegistrationForm() {
 
         {/* Success Confirmation Card */}
         {successData ? (
-          <div className="bg-neutral-50 rounded-2xl p-8 sm:p-12 border border-neutral-200 text-center max-w-xl mx-auto shadow-xs">
+          <div className="bg-neutral-50 rounded-2xl p-8 sm:p-12 border border-neutral-200 text-center max-w-xl mx-auto shadow-xs ">
             <div className="w-16 h-16 rounded-full bg-green-100 text-green-700 flex items-center justify-center mx-auto mb-4 text-3xl font-bold">
               ✓
             </div>
@@ -295,7 +295,7 @@ export default function RegistrationForm() {
           <form
             onSubmit={handleSubmit}
             noValidate
-            className="space-y-6 max-w-5xl"
+            className="space-y-6 max-w-5xl mx-auto"
           >
             {/* Error Message Banner */}
             {errorMessage && (
@@ -376,11 +376,10 @@ export default function RegistrationForm() {
                         key={g}
                         type="button"
                         onClick={() => setGender(g)}
-                        className={`flex-1 py-2.5 text-xs sm:text-sm font-medium rounded border transition cursor-pointer text-center ${
-                          gender === g
+                        className={`flex-1 py-2.5 text-xs sm:text-sm font-medium rounded border transition cursor-pointer text-center ${gender === g
                             ? "border-[#DE2027] bg-[#DE2027] text-white"
                             : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100"
-                        }`}
+                          }`}
                       >
                         {g}
                       </button>

@@ -27,7 +27,7 @@ export default function HockeyInsightsSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full bg-white text-neutral-900 py-16 lg:py-20 select-none overflow-hidden"
+      className="relative w-full bg-white text-neutral-900 py-6 sm:py-8 lg:py-10 select-none overflow-hidden"
     >
       <div className="site-container relative">
           <div className="flex flex-col items-center text-center">
