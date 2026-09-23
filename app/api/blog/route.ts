@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
         const blogs = await prisma.blog.findMany({
             orderBy: {
-                createdAt: "desc"
+                date: "desc"
             },
             select: {
                 id: true,
@@ -20,7 +20,9 @@ export async function GET(request: NextRequest) {
                 featuredImage: true,
                 date: true,
                 shortDescription: true,
-                createdAt: true,
+                content: true,
+                metaTitle: true,
+                metaDescription: true,
             }
         });
 
@@ -128,7 +130,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Validate date
-        const parsedDate = new Date(`${date}T00:00:00`);
+        const dateStr = date.trim();
+        const dateOnly = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+        const parsedDate = new Date(`${dateOnly}T00:00:00.000Z`);
 
         if (Number.isNaN(parsedDate.getTime())) {
             return NextResponse.json(

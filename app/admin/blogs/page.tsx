@@ -112,6 +112,7 @@ export default function BlogsManagementPage() {
   };
 
   const handleOpenEdit = (blog: any) => {
+    console.log(blog);
     setEditingBlog(blog);
     setTitle(blog.title || "");
     setSlug(blog.slug || "");
@@ -189,7 +190,8 @@ export default function BlogsManagementPage() {
 
       let res;
       if (editingBlog) {
-        res = await adminFetch(`/api/blog/${editingBlog.id}`, {
+        const blogIdentifier = editingBlog.slug || editingBlog.id;
+        res = await adminFetch(`/api/blog/${encodeURIComponent(blogIdentifier)}`, {
           method: "PUT",
           body: formData,
         });
@@ -225,7 +227,8 @@ export default function BlogsManagementPage() {
     setIsDeleting(true);
 
     try {
-      const res = await adminFetch(`/api/blog/${deleteBlog.id}`, {
+      const blogIdentifier = deleteBlog.slug || deleteBlog.id;
+      const res = await adminFetch(`/api/blog/${encodeURIComponent(blogIdentifier)}`, {
         method: "DELETE",
       });
 

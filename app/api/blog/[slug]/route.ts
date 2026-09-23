@@ -3,6 +3,7 @@ import { AuthError, requireAdmin } from "@/app/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
+import crypto from "crypto";
 
 type RouteContext = {
   params: Promise<{
@@ -24,9 +25,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
       );
     }
 
+    const decodedSlug = decodeURIComponent(slug).trim();
+
     let blog = await prisma.blog.findUnique({
       where: {
-        slug,
+        slug: decodedSlug,
       },
     });
 
@@ -34,7 +37,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       // Fallback in case id was passed
       blog = await prisma.blog.findUnique({
         where: {
-          id: slug,
+          id: decodedSlug,
         },
       });
     }
@@ -83,16 +86,18 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
+    const decodedSlug = decodeURIComponent(slug).trim();
+
     let existing = await prisma.blog.findUnique({
       where: {
-        id: slug,
+        slug: decodedSlug,
       },
     });
 
     if (!existing) {
       existing = await prisma.blog.findUnique({
         where: {
-          slug,
+          slug: decodedSlug,
         },
       });
     }
@@ -108,12 +113,12 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     const deleted = await prisma.blog.delete({
       where: {
-        id: existing.id,
+        slug: existing.slug,
       },
     });
 
     // Delete image from local storage
-    if (existing.featuredImage) {
+    if (existing.featuredImage && existing.featuredImage.startsWith("/uploads/blogs/")) {
       try {
         const imagePath = path.join(
           process.cwd(),
@@ -176,16 +181,19 @@ export async function PUT(
       );
     }
 
+    const decodedSlug = decodeURIComponent(slug).trim();
+
     let existingBlog = await prisma.blog.findUnique({
       where: {
-        id: slug,
+        slug: decodedSlug,
       },
     });
 
     if (!existingBlog) {
+      // Fallback in case id was passed instead of slug
       existingBlog = await prisma.blog.findUnique({
         where: {
-          slug,
+          id: decodedSlug,
         },
       });
     }
@@ -199,17 +207,63 @@ export async function PUT(
       );
     }
 
-    const formData = await request.formData();
+    let title: unknown = null;
+    let content: unknown = null;
+    let featuredImage: unknown = null;
+    let metaTitle: unknown = null;
+    let metaDescription: unknown = null;
+    let newSlug: unknown = null;
+    let date: unknown = null;
+    let shortDescription: unknown = null;
 
-    const title = formData.get("title");
-    const content = formData.get("content");
-    const featuredImage = formData.get("featuredImage");
-    const metaTitle = formData.get("metaTitle");
-    const metaDescription = formData.get("metaDescription");
-    const newSlug = formData.get("slug");
-    const date = formData.get("date");
-    const shortDescription =
-      formData.get("shortDescription");
+    const contentType = request.headers.get("content-type") || "";
+
+    if (
+      contentType.includes("multipart/form-data") ||
+      contentType.includes("application/x-www-form-urlencoded")
+    ) {
+      const formData = await request.formData();
+      title = formData.get("title");
+      content = formData.get("content");
+      featuredImage = formData.get("featuredImage");
+      metaTitle = formData.get("metaTitle");
+      metaDescription = formData.get("metaDescription");
+      newSlug = formData.get("slug");
+      date = formData.get("date");
+      shortDescription = formData.get("shortDescription");
+    } else if (contentType.includes("application/json")) {
+      const body = await request.json();
+      title = body.title;
+      content = body.content;
+      featuredImage = body.featuredImage;
+      metaTitle = body.metaTitle;
+      metaDescription = body.metaDescription;
+      newSlug = body.slug;
+      date = body.date;
+      shortDescription = body.shortDescription;
+    } else {
+      try {
+        const formData = await request.formData();
+        title = formData.get("title");
+        content = formData.get("content");
+        featuredImage = formData.get("featuredImage");
+        metaTitle = formData.get("metaTitle");
+        metaDescription = formData.get("metaDescription");
+        newSlug = formData.get("slug");
+        date = formData.get("date");
+        shortDescription = formData.get("shortDescription");
+      } catch {
+        const body = await request.json();
+        title = body.title;
+        content = body.content;
+        featuredImage = body.featuredImage;
+        metaTitle = body.metaTitle;
+        metaDescription = body.metaDescription;
+        newSlug = body.slug;
+        date = body.date;
+        shortDescription = body.shortDescription;
+      }
+    }
 
     const updateData: {
       title?: string;
@@ -223,11 +277,8 @@ export async function PUT(
     } = {};
 
     // TITLE
-    if (title !== null) {
-      if (
-        typeof title !== "string" ||
-        !title.trim()
-      ) {
+    if (title !== null && title !== undefined) {
+      if (typeof title !== "string" || !title.trim()) {
         return NextResponse.json(
           {
             message: "title must be a non-empty string",
@@ -240,11 +291,8 @@ export async function PUT(
     }
 
     // CONTENT
-    if (content !== null) {
-      if (
-        typeof content !== "string" ||
-        !content.trim()
-      ) {
+    if (content !== null && content !== undefined) {
+      if (typeof content !== "string" || !content.trim()) {
         return NextResponse.json(
           {
             message: "content must be a non-empty string",
@@ -257,11 +305,8 @@ export async function PUT(
     }
 
     // SLUG
-    if (newSlug !== null) {
-      if (
-        typeof newSlug !== "string" ||
-        !newSlug.trim()
-      ) {
+    if (newSlug !== null && newSlug !== undefined) {
+      if (typeof newSlug !== "string" || !newSlug.trim()) {
         return NextResponse.json(
           {
             message: "slug must be a non-empty string",
@@ -270,9 +315,10 @@ export async function PUT(
         );
       }
 
+      const formattedSlug = newSlug.trim().toLowerCase();
       const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-      if (!slugRegex.test(newSlug.trim())) {
+      if (!slugRegex.test(formattedSlug)) {
         return NextResponse.json(
           {
             message:
@@ -282,34 +328,29 @@ export async function PUT(
         );
       }
 
-      if (newSlug.trim() !== existingBlog.slug) {
-        const duplicateBlog =
-          await prisma.blog.findUnique({
-            where: {
-              slug: newSlug.trim(),
-            },
-          });
+      if (formattedSlug !== existingBlog.slug) {
+        const duplicateBlog = await prisma.blog.findUnique({
+          where: {
+            slug: formattedSlug,
+          },
+        });
 
-        if (duplicateBlog) {
+        if (duplicateBlog && duplicateBlog.id !== existingBlog.id) {
           return NextResponse.json(
             {
-              message:
-                "Blog with this slug already exists",
+              message: "Blog with this slug already exists",
             },
             { status: 409 },
           );
         }
       }
 
-      updateData.slug = newSlug.trim();
+      updateData.slug = formattedSlug;
     }
 
     // DATE
-    if (date !== null) {
-      if (
-        typeof date !== "string" ||
-        !date.trim()
-      ) {
+    if (date !== null && date !== undefined) {
+      if (typeof date !== "string" || !date.trim()) {
         return NextResponse.json(
           {
             message: "date must be provided",
@@ -318,9 +359,9 @@ export async function PUT(
         );
       }
 
-      const parsedDate = new Date(
-        `${date}T00:00:00`,
-      );
+      const dateStr = date.trim();
+      const dateOnly = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+      const parsedDate = new Date(`${dateOnly}T00:00:00.000Z`);
 
       if (Number.isNaN(parsedDate.getTime())) {
         return NextResponse.json(
@@ -335,10 +376,8 @@ export async function PUT(
     }
 
     // META TITLE
-    if (metaTitle !== null) {
-      if (
-        typeof metaTitle !== "string"
-      ) {
+    if (metaTitle !== null && metaTitle !== undefined) {
+      if (typeof metaTitle !== "string") {
         return NextResponse.json(
           {
             message: "metaTitle must be a string",
@@ -347,49 +386,42 @@ export async function PUT(
         );
       }
 
-      updateData.metaTitle =
-        metaTitle.trim() || null;
+      updateData.metaTitle = metaTitle.trim() || null;
     }
 
     // META DESCRIPTION
-    if (metaDescription !== null) {
-      if (
-        typeof metaDescription !== "string"
-      ) {
+    if (metaDescription !== null && metaDescription !== undefined) {
+      if (typeof metaDescription !== "string") {
         return NextResponse.json(
           {
-            message:
-              "metaDescription must be a string",
+            message: "metaDescription must be a string",
           },
           { status: 400 },
         );
       }
 
-      updateData.metaDescription =
-        metaDescription.trim() || null;
+      updateData.metaDescription = metaDescription.trim() || null;
     }
 
     // SHORT DESCRIPTION
-    if (shortDescription !== null) {
+    if (shortDescription !== null && shortDescription !== undefined) {
       if (
         typeof shortDescription !== "string" ||
         !shortDescription.trim()
       ) {
         return NextResponse.json(
           {
-            message:
-              "shortDescription is required and cannot be empty",
+            message: "shortDescription is required and cannot be empty",
           },
           { status: 400 },
         );
       }
 
-      updateData.shortDescription =
-        shortDescription.trim();
+      updateData.shortDescription = shortDescription.trim();
     }
 
     // FEATURED IMAGE
-    if (featuredImage instanceof File) {
+    if (featuredImage instanceof File && featuredImage.size > 0) {
       const allowedTypes = [
         "image/jpeg",
         "image/png",
@@ -399,8 +431,7 @@ export async function PUT(
       if (!allowedTypes.includes(featuredImage.type)) {
         return NextResponse.json(
           {
-            message:
-              "Only JPEG, PNG and WebP images are allowed",
+            message: "Only JPEG, PNG and WebP images are allowed",
           },
           { status: 400 },
         );
@@ -431,19 +462,19 @@ export async function PUT(
         fileName,
       );
 
-      const bytes =
-        await featuredImage.arrayBuffer();
-
+      const bytes = await featuredImage.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
       await fs.writeFile(filePath, buffer);
 
       newUploadedFilePath = filePath;
 
-      updateData.featuredImage =
-        `/uploads/blogs/${fileName}`;
+      updateData.featuredImage = `/uploads/blogs/${fileName}`;
+    } else if (typeof featuredImage === "string" && featuredImage.trim()) {
+      updateData.featuredImage = featuredImage.trim();
     }
 
+    // Update using existingBlog.id (primary key) for safe atomic update
     const updatedBlog = await prisma.blog.update({
       where: {
         id: existingBlog.id,
@@ -454,16 +485,14 @@ export async function PUT(
     // Delete old image only after successful DB update
     if (
       newUploadedFilePath &&
-      existingBlog.featuredImage
+      existingBlog.featuredImage &&
+      existingBlog.featuredImage.startsWith("/uploads/blogs/")
     ) {
       try {
         const oldImagePath = path.join(
           process.cwd(),
           "public",
-          existingBlog.featuredImage.replace(
-            /^\//,
-            "",
-          ),
+          existingBlog.featuredImage.replace(/^\//, ""),
         );
 
         await fs.unlink(oldImagePath);
@@ -514,3 +543,4 @@ export async function PUT(
     );
   }
 }
+
