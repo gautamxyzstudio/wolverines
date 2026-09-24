@@ -10,6 +10,15 @@ type RouteContext = {
   }>;
 };
 
+function formatBlogImage<T extends { featuredImage: string | null; updatedAt: Date }>(blog: T) {
+  return {
+    ...blog,
+    featuredImage: blog.featuredImage?.startsWith("/api/blog/")
+      ? `${blog.featuredImage.split("?")[0]}?v=${new Date(blog.updatedAt).getTime()}`
+      : blog.featuredImage,
+  };
+}
+
 // find by slug
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
@@ -78,7 +87,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return NextResponse.json(
       {
         message: "blog fetched successfully",
-        data: blog,
+        data: formatBlogImage(blog),
       },
       { status: 200 },
     );
@@ -378,8 +387,7 @@ export async function PUT(
       // If slug changed and existing image points to the image endpoint, update the URL
       if (
         existingBlog.featuredImage &&
-        existingBlog.featuredImage.startsWith("/api/blog/") &&
-        existingBlog.featuredImage.endsWith("/image")
+        existingBlog.featuredImage.startsWith("/api/blog/")
       ) {
         updateData.featuredImage = `/api/blog/${formattedSlug}/image`;
       }
@@ -475,12 +483,12 @@ export async function PUT(
         );
       }
 
-      // Max 5MB
-      const maxFileSize = 5 * 1024 * 1024;
+      // Max 10MB
+      const maxFileSize = 10 * 1024 * 1024;
       if (featuredImage.size > maxFileSize) {
         return NextResponse.json(
           {
-            message: "Image size exceeds 5MB limit",
+            message: "Image size exceeds 10MB limit",
           },
           { status: 400 },
         );
@@ -518,7 +526,7 @@ export async function PUT(
     return NextResponse.json(
       {
         message: "Blog updated successfully",
-        data: updatedBlog,
+        data: formatBlogImage(updatedBlog),
       },
       { status: 200 },
     );

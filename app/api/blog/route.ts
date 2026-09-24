@@ -2,6 +2,15 @@ import { prisma } from "@/app/lib/prisma";
 import { AuthError, requireAdmin } from "@/app/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
+function formatBlogImage<T extends { featuredImage: string | null; updatedAt: Date }>(blog: T) {
+    return {
+        ...blog,
+        featuredImage: blog.featuredImage?.startsWith("/api/blog/")
+            ? `${blog.featuredImage.split("?")[0]}?v=${new Date(blog.updatedAt).getTime()}`
+            : blog.featuredImage,
+    };
+}
+
 // find all
 export async function GET(request: NextRequest) {
     try {
@@ -24,9 +33,11 @@ export async function GET(request: NextRequest) {
             }
         });
 
+        const formattedBlogs = blogs.map(formatBlogImage);
+
         return NextResponse.json({
             message: "blogs fetched successfully",
-            data: blogs || []
+            data: formattedBlogs || []
         });
     } catch (error) {
         console.log("Error fetching blogs", error);
@@ -150,11 +161,11 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        // Validate file size (max 5MB)
-        const maxFileSize = 5 * 1024 * 1024;
+        // Validate file size (max 10MB)
+        const maxFileSize = 10 * 1024 * 1024;
         if (featuredImage.size > maxFileSize) {
             return NextResponse.json({
-                message: "Image size exceeds 5MB limit",
+                message: "Image size exceeds 10MB limit",
             }, { status: 400 });
         }
 
@@ -209,7 +220,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             message: "Blog created successfully",
-            data: blog
+            data: formatBlogImage(blog)
         }, { status: 201 });
 
     } catch (error) {

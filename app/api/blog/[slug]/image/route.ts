@@ -24,6 +24,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       select: {
         featuredImageData: true,
         featuredImageType: true,
+        updatedAt: true,
       },
     });
 
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         select: {
           featuredImageData: true,
           featuredImageType: true,
+          updatedAt: true,
         },
       });
     }
@@ -44,11 +46,19 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return new NextResponse("Image not found", { status: 404 });
     }
 
+    const etag = `"${new Date(blog.updatedAt).getTime()}"`;
+    const ifNoneMatch = request.headers.get("if-none-match");
+
+    if (ifNoneMatch === etag) {
+      return new Response(null, { status: 304 });
+    }
+
     return new Response(blog.featuredImageData, {
       status: 200,
       headers: {
         "Content-Type": blog.featuredImageType || "image/jpeg",
-        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+        "ETag": etag,
       },
     });
   } catch (error) {

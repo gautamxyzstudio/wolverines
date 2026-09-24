@@ -130,6 +130,11 @@ export default function BlogsManagementPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        setFormError("Selected image exceeds the 10MB size limit.");
+        return;
+      }
+      setFormError(null);
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -515,7 +520,7 @@ export default function BlogsManagementPage() {
                     <input
                       type="file"
                       id="featuredImageInput"
-                      accept="image/jpeg,image/png,image/webp"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
                       onChange={handleImageChange}
                       className="hidden"
                     />
@@ -527,7 +532,7 @@ export default function BlogsManagementPage() {
                       {imagePreview ? "Change Image" : "Upload Image"}
                     </label>
                     <p className="text-[11px] text-neutral-500">
-                      Supports JPG, PNG, and WebP (Max 10MB recommended)
+                      Supports JPG, PNG, WebP and GIF (Max 10MB)
                     </p>
                   </div>
                 </div>
