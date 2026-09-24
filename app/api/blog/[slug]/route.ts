@@ -3,7 +3,6 @@ import { AuthError, requireAdmin } from "@/app/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
-import crypto from "crypto";
 
 type RouteContext = {
   params: Promise<{
@@ -12,7 +11,6 @@ type RouteContext = {
 };
 
 // find by slug
-
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { slug } = await context.params;
@@ -31,6 +29,19 @@ export async function GET(request: NextRequest, context: RouteContext) {
       where: {
         slug: decodedSlug,
       },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        featuredImage: true,
+        date: true,
+        shortDescription: true,
+        content: true,
+        metaTitle: true,
+        metaDescription: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     if (!blog) {
@@ -38,6 +49,19 @@ export async function GET(request: NextRequest, context: RouteContext) {
       blog = await prisma.blog.findUnique({
         where: {
           id: decodedSlug,
+        },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          featuredImage: true,
+          date: true,
+          shortDescription: true,
+          content: true,
+          metaTitle: true,
+          metaDescription: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
     }
@@ -70,7 +94,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
 }
 
 // delete
-
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     await requireAdmin(request);
@@ -97,7 +120,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     if (!existing) {
       existing = await prisma.blog.findUnique({
         where: {
-          slug: decodedSlug,
+          id: decodedSlug,
         },
       });
     }
@@ -113,11 +136,16 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     const deleted = await prisma.blog.delete({
       where: {
-        slug: existing.slug,
+        id: existing.id,
+      },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
       },
     });
 
-    // Delete image from local storage
+    // Cleanup any legacy uploaded images on disk safely without throwing
     if (existing.featuredImage && existing.featuredImage.startsWith("/uploads/blogs/")) {
       try {
         const imagePath = path.join(
@@ -125,10 +153,9 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
           "public",
           existing.featuredImage.replace(/^\//, ""),
         );
-
         await fs.unlink(imagePath);
       } catch (fileError) {
-        console.error("Failed to delete blog image:", fileError);
+        // Ignore file removal error in serverless or missing files
       }
     }
 
@@ -160,13 +187,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 }
 
 // update
-
 export async function PUT(
   request: NextRequest,
   context: RouteContext,
 ) {
-  let newUploadedFilePath: string | undefined;
-
   try {
     await requireAdmin(request);
 
@@ -269,6 +293,8 @@ export async function PUT(
       title?: string;
       content?: string;
       featuredImage?: string | null;
+      featuredImageData?: Uint8Array<ArrayBuffer> | null;
+      featuredImageType?: string | null;
       metaTitle?: string | null;
       metaDescription?: string | null;
       slug?: string;
@@ -305,6 +331,7 @@ export async function PUT(
     }
 
     // SLUG
+    let finalSlug = existingBlog.slug;
     if (newSlug !== null && newSlug !== undefined) {
       if (typeof newSlug !== "string" || !newSlug.trim()) {
         return NextResponse.json(
@@ -346,6 +373,16 @@ export async function PUT(
       }
 
       updateData.slug = formattedSlug;
+      finalSlug = formattedSlug;
+
+      // If slug changed and existing image points to the image endpoint, update the URL
+      if (
+        existingBlog.featuredImage &&
+        existingBlog.featuredImage.startsWith("/api/blog/") &&
+        existingBlog.featuredImage.endsWith("/image")
+      ) {
+        updateData.featuredImage = `/api/blog/${formattedSlug}/image`;
+      }
     }
 
     // DATE
@@ -426,50 +463,33 @@ export async function PUT(
         "image/jpeg",
         "image/png",
         "image/webp",
+        "image/gif",
       ];
 
       if (!allowedTypes.includes(featuredImage.type)) {
         return NextResponse.json(
           {
-            message: "Only JPEG, PNG and WebP images are allowed",
+            message: "Only JPEG, PNG, WebP and GIF images are allowed",
           },
           { status: 400 },
         );
       }
 
-      const uploadDirectory = path.join(
-        process.cwd(),
-        "public",
-        "uploads",
-        "blogs",
-      );
-
-      await fs.mkdir(uploadDirectory, {
-        recursive: true,
-      });
-
-      const extension =
-        featuredImage.type === "image/jpeg"
-          ? ".jpg"
-          : featuredImage.type === "image/png"
-            ? ".png"
-            : ".webp";
-
-      const fileName = `${crypto.randomUUID()}${extension}`;
-
-      const filePath = path.join(
-        uploadDirectory,
-        fileName,
-      );
+      // Max 5MB
+      const maxFileSize = 5 * 1024 * 1024;
+      if (featuredImage.size > maxFileSize) {
+        return NextResponse.json(
+          {
+            message: "Image size exceeds 5MB limit",
+          },
+          { status: 400 },
+        );
+      }
 
       const bytes = await featuredImage.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
-      await fs.writeFile(filePath, buffer);
-
-      newUploadedFilePath = filePath;
-
-      updateData.featuredImage = `/uploads/blogs/${fileName}`;
+      updateData.featuredImageData = new Uint8Array(bytes);
+      updateData.featuredImageType = featuredImage.type;
+      updateData.featuredImage = `/api/blog/${finalSlug}/image`;
     } else if (typeof featuredImage === "string" && featuredImage.trim()) {
       updateData.featuredImage = featuredImage.trim();
     }
@@ -480,29 +500,20 @@ export async function PUT(
         id: existingBlog.id,
       },
       data: updateData,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        featuredImage: true,
+        date: true,
+        shortDescription: true,
+        content: true,
+        metaTitle: true,
+        metaDescription: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
-
-    // Delete old image only after successful DB update
-    if (
-      newUploadedFilePath &&
-      existingBlog.featuredImage &&
-      existingBlog.featuredImage.startsWith("/uploads/blogs/")
-    ) {
-      try {
-        const oldImagePath = path.join(
-          process.cwd(),
-          "public",
-          existingBlog.featuredImage.replace(/^\//, ""),
-        );
-
-        await fs.unlink(oldImagePath);
-      } catch (fileError) {
-        console.error(
-          "Failed to delete old blog image:",
-          fileError,
-        );
-      }
-    }
 
     return NextResponse.json(
       {
@@ -512,18 +523,6 @@ export async function PUT(
       { status: 200 },
     );
   } catch (error) {
-    // Remove newly uploaded file if database update fails
-    if (newUploadedFilePath) {
-      try {
-        await fs.unlink(newUploadedFilePath);
-      } catch (fileError) {
-        console.error(
-          "Failed to remove uploaded image:",
-          fileError,
-        );
-      }
-    }
-
     if (error instanceof AuthError) {
       return NextResponse.json(
         {
@@ -543,4 +542,3 @@ export async function PUT(
     );
   }
 }
-

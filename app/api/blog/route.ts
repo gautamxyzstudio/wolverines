@@ -1,14 +1,10 @@
 import { prisma } from "@/app/lib/prisma";
 import { AuthError, requireAdmin } from "@/app/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
 
 // find all
-
 export async function GET(request: NextRequest) {
     try {
-
         const blogs = await prisma.blog.findMany({
             orderBy: {
                 date: "desc"
@@ -23,6 +19,8 @@ export async function GET(request: NextRequest) {
                 content: true,
                 metaTitle: true,
                 metaDescription: true,
+                createdAt: true,
+                updatedAt: true,
             }
         });
 
@@ -34,19 +32,16 @@ export async function GET(request: NextRequest) {
         console.log("Error fetching blogs", error);
         return NextResponse.json({
             message: "Failed to fetch blogs"
-        }, { status: 500 })
+        }, { status: 500 });
     }
 }
 
 // create
-
 export async function POST(request: NextRequest) {
-    let uploadedFilePath: string | undefined
     try {
-
         await requireAdmin(request);
 
-        const data = await request.formData()
+        const data = await request.formData();
 
         const title = data.get("title");
         const content = data.get("content");
@@ -57,37 +52,35 @@ export async function POST(request: NextRequest) {
         const date = data.get("date");
         const shortDescription = data.get("shortDescription");
 
-
         // required fields
-
         if (typeof title !== "string" || !title.trim()) {
             return NextResponse.json({
                 message: "title is required",
-            }, { status: 400 })
+            }, { status: 400 });
         }
 
         if (typeof content !== "string" || !content.trim()) {
             return NextResponse.json({
                 message: "content is required",
-            }, { status: 400 })
+            }, { status: 400 });
         }
 
         if (typeof slug !== "string" || !slug.trim()) {
             return NextResponse.json({
                 message: "slug is required",
-            }, { status: 400 })
+            }, { status: 400 });
         }
 
         if (typeof date !== "string") {
             return NextResponse.json({
                 message: "date is required",
-            }, { status: 400 })
+            }, { status: 400 });
         }
 
         if (typeof shortDescription !== "string" || !shortDescription.trim()) {
             return NextResponse.json({
                 message: "shortDescription is required",
-            }, { status: 400 })
+            }, { status: 400 });
         }
 
         if (!(featuredImage instanceof File)) {
@@ -101,9 +94,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Validate slug
+        const formattedSlug = slug.trim().toLowerCase();
         const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-        if (!slugRegex.test(slug.trim())) {
+        if (!slugRegex.test(formattedSlug)) {
             return NextResponse.json(
                 {
                     message:
@@ -116,7 +110,7 @@ export async function POST(request: NextRequest) {
         // Check duplicate slug
         const existingBlog = await prisma.blog.findUnique({
             where: {
-                slug: slug.trim(),
+                slug: formattedSlug,
             },
         });
 
@@ -147,107 +141,84 @@ export async function POST(request: NextRequest) {
             "image/jpeg",
             "image/png",
             "image/webp",
+            "image/gif",
         ];
 
         if (!allowedTypes.includes(featuredImage.type)) {
             return NextResponse.json({
-                message: "invalid file type , only JPEG, PNG and WebP images are allowed",
-            }, { status: 400 })
+                message: "invalid file type, only JPEG, PNG, WebP and GIF images are allowed",
+            }, { status: 400 });
         }
 
-        // Create upload directory
-        const uploadDirectory = path.join(
-            process.cwd(),
-            "public",
-            "uploads",
-            "blogs",
-        );
+        // Validate file size (max 5MB)
+        const maxFileSize = 5 * 1024 * 1024;
+        if (featuredImage.size > maxFileSize) {
+            return NextResponse.json({
+                message: "Image size exceeds 5MB limit",
+            }, { status: 400 });
+        }
 
-        await fs.mkdir(uploadDirectory, {
-            recursive: true,
-        });
-
-        // Create unique filename
-        const extension =
-            featuredImage.type === "image/jpeg"
-                ? ".jpg"
-                : featuredImage.type === "image/png"
-                    ? ".png"
-                    : ".webp";
-
-        const fileName = `${crypto.randomUUID()}${extension}`;
-
-        const filePath = path.join(
-            uploadDirectory,
-            fileName,
-        );
-
-        // Save image
+        // Convert File to Uint8Array for database storage
         const bytes = await featuredImage.arrayBuffer();
-        const buffer = Buffer.from(bytes);
+        const buffer = new Uint8Array(bytes);
 
-        await fs.writeFile(filePath, buffer);
-
-        uploadedFilePath = filePath;
-
-        // Path that will be stored in database
-        const imageUrl = `/uploads/blogs/${fileName}`;
+        // Public image endpoint URL
+        const imageUrl = `/api/blog/${formattedSlug}/image`;
 
         const blog = await prisma.blog.create({
             data: {
                 title: title.trim(),
                 content,
                 featuredImage: imageUrl,
+                featuredImageData: buffer,
+                featuredImageType: featuredImage.type,
 
                 metaTitle:
-                    typeof metaTitle === "string" &&
-                        metaTitle.trim()
+                    typeof metaTitle === "string" && metaTitle.trim()
                         ? metaTitle.trim()
                         : null,
 
                 metaDescription:
-                    typeof metaDescription === "string" &&
-                        metaDescription.trim()
+                    typeof metaDescription === "string" && metaDescription.trim()
                         ? metaDescription.trim()
                         : null,
 
-                slug: slug.trim(),
+                slug: formattedSlug,
 
                 date: parsedDate,
 
                 shortDescription:
-                    typeof shortDescription === "string" &&
-                        shortDescription.trim()
+                    typeof shortDescription === "string" && shortDescription.trim()
                         ? shortDescription.trim()
-                        : null
-
+                        : null,
+            },
+            select: {
+                id: true,
+                title: true,
+                slug: true,
+                featuredImage: true,
+                date: true,
+                shortDescription: true,
+                content: true,
+                metaTitle: true,
+                metaDescription: true,
+                createdAt: true,
+                updatedAt: true,
             }
-        })
+        });
 
         return NextResponse.json({
             message: "Blog created successfully",
             data: blog
-        }, { status: 201 })
+        }, { status: 201 });
 
     } catch (error) {
-        // Remove uploaded image if database creation fails
-        if (uploadedFilePath) {
-            try {
-                await fs.unlink(uploadedFilePath);
-            } catch (fileError) {
-                console.error(
-                    "Failed to remove uploaded image:",
-                    fileError,
-                );
-            }
-        }
-
         if (error instanceof AuthError) {
             return NextResponse.json({
                 message: error.message
             }, {
                 status: error.status
-            })
+            });
         }
 
         console.error("Error creating blog", error);
@@ -255,6 +226,6 @@ export async function POST(request: NextRequest) {
             message: "Failed to create blog"
         }, {
             status: 500
-        })
+        });
     }
 }

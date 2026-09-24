@@ -240,6 +240,8 @@ model Blog {
   title            String
   content          String
   featuredImage    String?
+  featuredImageData Bytes?
+  featuredImageType String?
   metaTitle        String?
   metaDescription  String?
   slug             String   @unique
