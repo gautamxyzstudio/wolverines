@@ -172,7 +172,7 @@ export default function Footer() {
 
                   {/* Instagram */}
                   <a
-                    href="https://www.instagram.com/wolverinesfhc/"
+                    href="https://www.instagram.com/thewolverines.ca/"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Follow Wolverines on Instagram"

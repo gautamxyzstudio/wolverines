@@ -358,7 +358,7 @@ function getUserEmailShell({
                   <!-- INSTAGRAM -->
                   <td align="center" valign="top" style="padding:0 12px;">
                     <a
-                      href="https://www.instagram.com/wolverinesfhc/"
+                      href="https://www.instagram.com/thewolverines.ca/"
                       target="_blank"
                       style="text-decoration:none;display:inline-block;"
                     >
