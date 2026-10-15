@@ -10,7 +10,7 @@ export default function GalleryView() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   return (
-    <div className="flex flex-col w-full min-h-[calc(100vh-80px)] bg-white text-neutral-900">
+    <div className="flex flex-col w-full min-h-[calc(100vh-80px)] bg-white text-neutral-900" key="gallery-root-view-v3">
       {/* 
         Hero Section with the 3D Curved Concave Ribbon Marquee 
       */}
