@@ -1525,7 +1525,7 @@ export async function sendPasswordResetOtpEmail({
           ${otp}
         </div>
         <p style="margin: 0; font-size: 12px; color: #dc2626; font-weight: 600;">
-          This code is valid for 2 minutes only.
+          This code is valid for 10 minutes only.
         </p>
       </div>
 
