@@ -1,21 +1,35 @@
 import "dotenv/config";
+import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/app/generated/prisma/client";
 
 const connectionString = process.env.DATABASE_URL;
 
-
 if (!connectionString) {
   throw new Error("DATABASE_URL is not defined");
 }
 
-const adapter = new PrismaPg({
-  connectionString,
-});
-
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
+  pool: Pool | undefined;
 };
+
+const pool =
+  globalForPrisma.pool ??
+  new Pool({
+    connectionString,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000,
+  });
+
+pool.on("error", (err) => {
+  console.error("Postgres client error:", err.message);
+});
+
+const adapter = new PrismaPg(pool);
 
 export const prisma =
   globalForPrisma.prisma ??
@@ -25,4 +39,5 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
+  globalForPrisma.pool = pool;
 }

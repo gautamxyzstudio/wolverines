@@ -58,3 +58,27 @@ export const resetPasswordSchema = z.object({
   message: "Either OTP or reset token is required to reset password",
   path: ["resetToken"],
 });
+
+export const changePasswordSchema = z
+  .object({
+    email: z
+      .string()
+      .trim()
+      .email("Invalid email address")
+      .optional(),
+    currentPassword: z.string().optional(),
+    oldPassword: z.string().optional(),
+    newPassword: z
+      .string({
+        error: (issue) =>
+          issue.code === "invalid_type"
+            ? "New password must be a string"
+            : "New password is required",
+      })
+      .min(6, "New password must be at least 6 characters"),
+    confirmPassword: z.string().optional(),
+  })
+  .refine((data) => Boolean(data.currentPassword || data.oldPassword), {
+    message: "Current password is required",
+    path: ["currentPassword"],
+  });

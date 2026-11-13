@@ -79,6 +79,9 @@ export default function AdminLayout({
     if (pathname.startsWith("/admin/emails")) {
       return { title: "Email Marketing & History", subtitle: "Compose dynamic campaigns and inspect delivery history" };
     }
+    if (pathname.startsWith("/admin/change-password")) {
+      return { title: "Security & Password", subtitle: "Update your admin account credentials" };
+    }
     return { title: "Admin Portal", subtitle: "The Wolverines Sports Club" };
   };
 

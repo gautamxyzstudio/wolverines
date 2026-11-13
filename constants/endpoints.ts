@@ -4,6 +4,7 @@ export const API_ENDPOINTS = {
   FORGOT_PASSWORD: "/api/auth/forgot-password",
   VERIFY_OTP: "/api/auth/verify-otp",
   RESET_PASSWORD: "/api/auth/reset-password",
+  CHANGE_PASSWORD: "/api/auth/change-password",
 
   // Core & Forms
   JOIN_OUR_CLUB: "/api/join-our-club",

@@ -17,9 +17,11 @@ import {
   ExternalLink,
   Shield,
   X,
+  Lock,
 } from "lucide-react";
 import { clearAdminSession, getAdminUser } from "@/app/lib/admin-api";
 import { useEffect, useState } from "react";
+import ChangePasswordModal from "@/components/admin/ChangePasswordModal";
 
 interface AdminSidebarProps {
   mobileOpen?: boolean;
@@ -79,6 +81,7 @@ export default function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebar
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 
   useEffect(() => {
     setUser(getAdminUser());
@@ -189,13 +192,23 @@ export default function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebar
             </div>
           </div>
 
-          <button
-            onClick={handleLogout}
-            title="Logout"
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-[#D32F2F] hover:bg-red-950/30 transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => setChangePasswordOpen(true)}
+              title="Change Password"
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <Lock className="h-4 w-4" />
+            </button>
+
+            <button
+              onClick={handleLogout}
+              title="Logout"
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-[#D32F2F] hover:bg-red-950/30 transition-colors cursor-pointer"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -224,6 +237,12 @@ export default function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebar
       >
         {content}
       </aside>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={changePasswordOpen}
+        onClose={() => setChangePasswordOpen(false)}
+      />
     </>
   );
 }
