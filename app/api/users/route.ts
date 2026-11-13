@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin(request);
+
     const data = await request.json();
 
     // Validate request body

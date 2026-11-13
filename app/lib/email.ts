@@ -1480,3 +1480,81 @@ export async function sendDynamicEmail({
     failedRecipients,
   };
 }
+
+// ----------------------------------------------------------------------
+// 6. Password Reset OTP Verification Email
+// ----------------------------------------------------------------------
+
+export async function sendPasswordResetOtpEmail({
+  email,
+  name,
+  otp,
+}: {
+  email: string;
+  name?: string;
+  otp: string;
+}) {
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL;
+  const senderName = process.env.BREVO_SENDER_NAME || "The Wolverines";
+
+  if (!apiKey || !senderEmail) {
+    throw new Error("Brevo email configuration is missing");
+  }
+
+  const htmlContent = getUserEmailShell({
+    title: "Password Reset Verification Code",
+    preheader: `Your verification code is ${otp}. Valid for 10 minutes.`,
+    badgeText: "Password Reset",
+    badgeBg: "#D9001B",
+    contentHtml: `
+      <div style="margin-bottom: 24px;">
+        <h2 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 700; color: #111827;">
+          Hello ${name || "there"},
+        </h2>
+        <p style="margin: 0; font-size: 14px; color: #4b5563; line-height: 1.6;">
+          We received a request to reset the password for your <strong>The Wolverines</strong> account. Please use the 6-digit verification code below to proceed:
+        </p>
+      </div>
+
+      <div style="background-color: #f9fafb; border: 2px dashed #D9001B; border-radius: 12px; padding: 28px 20px; text-align: center; margin: 28px 0;">
+        <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 1.2px;">
+          Your 6-Digit Verification Code
+        </p>
+        <div style="font-size: 38px; font-weight: 900; letter-spacing: 10px; color: #111827; font-family: 'Courier New', Courier, monospace; margin: 4px 0 10px 0;">
+          ${otp}
+        </div>
+        <p style="margin: 0; font-size: 12px; color: #dc2626; font-weight: 600;">
+          This code is valid for 2 minutes only.
+        </p>
+      </div>
+
+      <div style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px;">
+        <p style="margin: 0; font-size: 13px; color: #92400e; line-height: 1.5;">
+          <strong>Security Notice:</strong> If you did not request a password reset, please disregard this email. Your password will remain secure and unchanged. Never share this code with anyone.
+        </p>
+      </div>
+    `,
+  });
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": apiKey,
+    },
+    body: JSON.stringify({
+      sender: { name: senderName, email: senderEmail },
+      to: [{ email, name: name || "User" }],
+      subject: `Your Password Reset Verification Code: ${otp}`,
+      htmlContent,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Password reset OTP email failed: ${errorText}`);
+  }
+
+  return await response.json();
+}
