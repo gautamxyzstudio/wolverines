@@ -628,6 +628,21 @@ function getAdminEmailShell({
 }
 
 // ----------------------------------------------------------------------
+// Helper: Get Admin Notification Recipients
+// ----------------------------------------------------------------------
+
+export function getAdminNotificationRecipients(): { email: string }[] {
+  const envVal = process.env.ADMIN_NOTIFICATION_EMAIL;
+  if (!envVal) return [];
+
+  return envVal
+    .split(/[,;]+/)
+    .map((email) => email.trim())
+    .filter(Boolean)
+    .map((email) => ({ email }));
+}
+
+// ----------------------------------------------------------------------
 // 1. Contact Us & Player Inquiry Notifications
 // ----------------------------------------------------------------------
 
@@ -636,9 +651,9 @@ export async function sendContactUsNotification(contact: ContactUsData) {
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
   const senderName = process.env.BREVO_SENDER_NAME || "The Wolverines";
-  const notificationEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+  const adminRecipients = getAdminNotificationRecipients();
 
-  if (!apiKey || !senderEmail || !notificationEmail) {
+  if (!apiKey || !senderEmail || adminRecipients.length === 0) {
     throw new Error("Brevo email configuration missing");
   }
 
@@ -693,7 +708,7 @@ export async function sendContactUsNotification(contact: ContactUsData) {
     },
     body: JSON.stringify({
       sender: { name: senderName, email: senderEmail },
-      to: [{ email: notificationEmail }],
+      to: adminRecipients,
       subject: `New Inquiry from ${contact.fullName} - The Wolverines`,
       htmlContent,
     }),
@@ -787,9 +802,9 @@ export async function sendCampRegistrationNotification(
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
   const senderName = process.env.BREVO_SENDER_NAME || "The Wolverines";
-  const notificationEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+  const adminRecipients = getAdminNotificationRecipients();
 
-  if (!apiKey || !senderEmail || !notificationEmail) {
+  if (!apiKey || !senderEmail || adminRecipients.length === 0) {
     throw new Error("Brevo email configuration is missing");
   }
 
@@ -948,7 +963,7 @@ const childrenRows = childrenList
     },
     body: JSON.stringify({
       sender: { name: senderName, email: senderEmail },
-      to: [{ email: notificationEmail }],
+      to: adminRecipients,
       subject: `New ${campName} Registration - ${registration.parentGuardianName} ($${formattedTotal} CAD)`,
       htmlContent,
     }),
@@ -1220,10 +1235,10 @@ export async function sendDonationAdminNotification({
 }: DonationData) {
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
-  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+  const adminRecipients = getAdminNotificationRecipients();
   const senderName = process.env.BREVO_SENDER_NAME || "The Wolverines";
 
-  if (!apiKey || !senderEmail || !adminEmail) {
+  if (!apiKey || !senderEmail || adminRecipients.length === 0) {
     throw new Error("Brevo email configuration is missing");
   }
 
@@ -1279,7 +1294,7 @@ export async function sendDonationAdminNotification({
     },
     body: JSON.stringify({
       sender: { name: senderName, email: senderEmail },
-      to: [{ email: adminEmail }],
+      to: adminRecipients,
       subject: `New Donation Received: $${formattedAmount} CAD - ${donorName}`,
       htmlContent,
     }),
@@ -1300,10 +1315,10 @@ export async function sendJoinOurClubAdminNotification(
 ) {
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
-  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+  const adminRecipients = getAdminNotificationRecipients();
   const senderName = process.env.BREVO_SENDER_NAME || "The Wolverines";
 
-  if (!apiKey || !senderEmail || !adminEmail) {
+  if (!apiKey || !senderEmail || adminRecipients.length === 0) {
     throw new Error("Brevo email configuration is missing");
   }
 
@@ -1385,7 +1400,7 @@ export async function sendJoinOurClubAdminNotification(
     },
     body: JSON.stringify({
       sender: { name: senderName, email: senderEmail },
-      to: [{ email: adminEmail }],
+      to: adminRecipients,
       subject: `New Join Our Club Request: ${joinOurClub.childName} (Parent: ${joinOurClub.parentGuardianName})`,
       htmlContent,
     }),

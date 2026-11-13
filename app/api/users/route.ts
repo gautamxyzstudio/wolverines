@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../lib/prisma";
 import { hashPassword } from "@/app/lib/password";
 import { createUserSchema } from "@/app/validations/user.validation";
-import { requireAdmin,AuthError } from "@/app/lib/auth";
+import { requireAdmin, AuthError } from "@/app/lib/auth";
 
 // get all users
 
@@ -32,8 +32,7 @@ export async function GET(request: NextRequest) {
       { status: 200 },
     );
   } catch (error) {
-
-       if (error instanceof AuthError) {
+    if (error instanceof AuthError) {
       return NextResponse.json(
         {
           message: error.message,
@@ -56,7 +55,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-
+    await requireAdmin(request);
     const data = await request.json();
 
     // Validate request body
