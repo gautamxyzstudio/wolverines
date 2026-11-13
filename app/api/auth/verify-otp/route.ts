@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
+        success: true,
         message: "OTP verified successfully. You may now reset your password.",
         resetToken,
       },
@@ -88,6 +89,7 @@ export async function POST(request: NextRequest) {
     console.error("Verify OTP error:", error);
     return NextResponse.json(
       {
+        success: false,
         message: error?.message || "Failed to verify OTP.",
       },
       { status: 500 },

@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
     // Generate cryptographically secure 6-digit OTP
     const otp = crypto.randomInt(100000, 1000000).toString();
 
-    // Expiration: 2 minutes from now
-    const expiresAt = new Date(Date.now() + 2 * 60 * 1000);
+    // Expiration: 10 minutes from now
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     // Remove any previous active reset tokens for this email
     await prisma.passwordResetToken.deleteMany({
@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
+        success: true,
         message: "A 6-digit verification code has been sent to your email.",
       },
       { status: 200 },
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
     console.error("Forgot password error:", error);
     return NextResponse.json(
       {
+        success: false,
         message: error?.message || "Failed to process forgot password request.",
       },
       { status: 500 },

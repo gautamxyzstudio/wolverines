@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { setAdminSession } from "@/app/lib/admin-api";
 import Link from "next/link";
+import { API_ENDPOINTS } from "@/constants/endpoints";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(API_ENDPOINTS.LOGIN, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -134,9 +135,17 @@ export default function AdminLoginPage() {
 
             {/* Password Field */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-2">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300">
+                  Password
+                </label>
+                <Link
+                  href={email.trim() ? `/admin/forgot-password?email=${encodeURIComponent(email.trim())}` : "/admin/forgot-password"}
+                  className="text-xs text-neutral-400 hover:text-[#D32F2F] transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-500">
                   <Lock className="h-4 w-4" />

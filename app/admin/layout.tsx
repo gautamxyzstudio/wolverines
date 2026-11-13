@@ -17,10 +17,10 @@ export default function AdminLayout({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  const isLoginPage = pathname === "/admin/login";
+  const isAuthPage = pathname === "/admin/login" || pathname === "/admin/forgot-password";
 
   useEffect(() => {
-    if (isLoginPage) {
+    if (isAuthPage) {
       setIsCheckingAuth(false);
       return;
     }
@@ -33,9 +33,9 @@ export default function AdminLayout({
     } else {
       setIsCheckingAuth(false);
     }
-  }, [pathname, isLoginPage, router]);
+  }, [pathname, isAuthPage, router]);
 
-  if (isLoginPage) {
+  if (isAuthPage) {
     return <div className="min-h-screen bg-[#0b0b0b] text-white">{children}</div>;
   }
 

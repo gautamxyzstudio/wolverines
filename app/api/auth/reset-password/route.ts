@@ -116,6 +116,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
+        success: true,
         message: "Your password has been reset successfully. You can now sign in.",
       },
       { status: 200 },
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
     console.error("Reset password error:", error);
     return NextResponse.json(
       {
+        success: false,
         message: error?.message || "Failed to reset password.",
       },
       { status: 500 },
