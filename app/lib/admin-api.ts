@@ -7,7 +7,7 @@ export interface AdminUser {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "USER";
+  role: "ADMIN" | "SUPER_ADMIN";
   createdAt?: string;
 }
 

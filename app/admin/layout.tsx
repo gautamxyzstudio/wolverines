@@ -28,7 +28,7 @@ export default function AdminLayout({
     const token = getAdminToken();
     const user = getAdminUser();
 
-    if (!token || !user || user.role !== "ADMIN") {
+    if (!token || !user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
       router.push("/admin/login");
     } else {
       setIsCheckingAuth(false);
@@ -78,6 +78,9 @@ export default function AdminLayout({
     }
     if (pathname.startsWith("/admin/emails")) {
       return { title: "Email Marketing & History", subtitle: "Compose dynamic campaigns and inspect delivery history" };
+    }
+    if (pathname.startsWith("/admin/users")) {
+      return { title: "User Management", subtitle: "Manage system administrators and roles" };
     }
     if (pathname.startsWith("/admin/change-password")) {
       return { title: "Security & Password", subtitle: "Update your admin account credentials" };

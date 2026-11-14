@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Loader2, X } from "lucide-react";
+import { Trash2, Loader2, X } from "lucide-react";
 import React, { useEffect } from "react";
 
 interface DeleteModalProps {
@@ -8,6 +8,8 @@ interface DeleteModalProps {
   title: string;
   description?: string;
   itemTitle?: string;
+  confirmText?: string;
+  icon?: React.ReactNode;
   isLoading?: boolean;
   onConfirm: () => void;
   onClose: () => void;
@@ -18,6 +20,8 @@ export default function DeleteModal({
   title,
   description = "Are you sure you want to delete this item? This action cannot be undone.",
   itemTitle,
+  confirmText,
+  icon,
   isLoading = false,
   onConfirm,
   onClose,
@@ -36,9 +40,9 @@ export default function DeleteModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 backdrop-blur-[2px] animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-md overflow-hidden rounded-2xl bg-[#141414] border border-white/10 p-6 shadow-2xl shadow-red-950/20"
+        className="relative w-full max-w-md overflow-hidden rounded-2xl bg-[#141414] border border-white/10 p-6 shadow-2xl shadow-black/50"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -50,8 +54,8 @@ export default function DeleteModal({
         </button>
 
         <div className="flex items-start gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-red-950/60 border border-red-500/30 flex items-center justify-center shrink-0 text-red-500 shadow-lg shadow-red-950/50">
-            <AlertTriangle className="h-6 w-6" />
+          <div className="h-11 w-11 rounded-2xl bg-red-950/40 border border-red-500/25 flex items-center justify-center shrink-0 text-[#D32F2F]">
+            {icon || <Trash2 className="h-5 w-5" />}
           </div>
 
           <div className="flex-1 pr-4">
@@ -74,7 +78,7 @@ export default function DeleteModal({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white hover:bg-white/5 border border-white/10 transition-colors"
+            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white hover:bg-white/5 border border-white/10 transition-colors cursor-pointer"
           >
             Cancel
           </button>
@@ -83,15 +87,15 @@ export default function DeleteModal({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-lg shadow-red-950/50 transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#D32F2F] hover:bg-[#b71c1c] text-white shadow-sm transition-colors duration-150 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Deleting...
+                <span>Deleting...</span>
               </>
             ) : (
-              "Delete Confirm"
+              confirmText || "Delete"
             )}
           </button>
         </div>

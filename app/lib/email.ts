@@ -1558,3 +1558,178 @@ export async function sendPasswordResetOtpEmail({
 
   return await response.json();
 }
+
+/**
+ * Sent to an administrator when their account is suspended / blocked by a Super Admin.
+ */
+export async function sendUserBlockedNotification({
+  name,
+  email,
+}: {
+  name: string;
+  email: string;
+}) {
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL;
+  const senderName = process.env.BREVO_SENDER_NAME || "The Wolverines";
+
+  if (!apiKey || !senderEmail || !email) {
+    console.warn("Skipping sendUserBlockedNotification: missing API key, sender or recipient email.");
+    return;
+  }
+
+  const htmlContent = getUserEmailShell({
+    title: "Account Suspended - The Wolverines Admin Portal",
+    preheader: "Notice: Your administrative access has been suspended.",
+    badgeText: "Account Suspended",
+    badgeBg: "#dc2626",
+    contentHtml: `
+      <div style="margin-bottom: 24px;">
+        <h2 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 700; color: #111827;">
+          Hello ${name || "Administrator"},
+        </h2>
+        <p style="margin: 0; font-size: 14px; color: #4b5563; line-height: 1.6;">
+          This is an official notice to inform you that your access to <strong>The Wolverines Admin Portal</strong> has been suspended by a Super Administrator.
+        </p>
+      </div>
+
+      <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <h3 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 700; color: #991b1b; text-transform: uppercase;">
+          Account Status: Blocked
+        </h3>
+        <p style="margin: 0 0 8px 0; font-size: 13px; color: #7f1d1d; line-height: 1.5;">
+          • You will not be able to log in to the admin portal.<br />
+          • Any active management sessions have been terminated.
+        </p>
+        <p style="margin: 0; font-size: 12px; color: #991b1b;">
+          Associated Email: <strong>${email}</strong>
+        </p>
+      </div>
+
+      <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px; margin-bottom: 24px;">
+        <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 700; color: #111827;">
+          Need Assistance?
+        </h4>
+        <p style="margin: 0; font-size: 13px; color: #4b5563; line-height: 1.5;">
+          If you believe this action was taken in error or if you require clarification regarding your account status, please contact your organization's Super Administrator.
+        </p>
+      </div>
+
+      <div style="text-align: center; margin-top: 24px;">
+        <p style="margin: 0; font-size: 13px; color: #6b7280;">
+          The Wolverines Field Hockey Club Administration
+        </p>
+      </div>
+    `,
+  });
+
+  try {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": apiKey,
+      },
+      body: JSON.stringify({
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email, name: name || "Administrator" }],
+        subject: "Account Suspended Notice - The Wolverines Admin Portal",
+        htmlContent,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("sendUserBlockedNotification failed:", errorText);
+    }
+  } catch (err) {
+    console.error("sendUserBlockedNotification error:", err);
+  }
+}
+
+/**
+ * Sent to an administrator when their account is unblocked / restored by a Super Admin.
+ */
+export async function sendUserUnblockedNotification({
+  name,
+  email,
+}: {
+  name: string;
+  email: string;
+}) {
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL;
+  const senderName = process.env.BREVO_SENDER_NAME || "The Wolverines";
+  const siteUrl = process.env.LIVE_URL || "https://demo.thewolverines.ca";
+
+  if (!apiKey || !senderEmail || !email) {
+    console.warn("Skipping sendUserUnblockedNotification: missing API key, sender or recipient email.");
+    return;
+  }
+
+  const loginUrl = `${siteUrl.replace(/\/$/, "")}/admin/login`;
+
+  const htmlContent = getUserEmailShell({
+    title: "Account Restored - The Wolverines Admin Portal",
+    preheader: "Your administrative access has been restored.",
+    badgeText: "Account Active",
+    badgeBg: "#16a34a",
+    contentHtml: `
+      <div style="margin-bottom: 24px;">
+        <h2 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 700; color: #111827;">
+          Hello ${name || "Administrator"},
+        </h2>
+        <p style="margin: 0; font-size: 14px; color: #4b5563; line-height: 1.6;">
+          Good news! Your administrative account for <strong>The Wolverines Admin Portal</strong> has been unblocked and restored by a Super Administrator.
+        </p>
+      </div>
+
+      <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 700; color: #166534; text-transform: uppercase;">
+          Account Status: Active
+        </h3>
+        <p style="margin: 0; font-size: 13px; color: #15803d; line-height: 1.5;">
+          Your login credentials have been re-enabled and full access to your assigned administrative features is now restored.
+        </p>
+      </div>
+
+      <div style="text-align: center; margin: 28px 0;">
+        <a
+          href="${loginUrl}"
+          style="display: inline-block; padding: 12px 28px; background-color: #D32F2F; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px; letter-spacing: 0.5px;"
+        >
+          Sign In to Admin Portal &rarr;
+        </a>
+      </div>
+
+      <div style="text-align: center; margin-top: 24px;">
+        <p style="margin: 0; font-size: 13px; color: #6b7280;">
+          The Wolverines Field Hockey Club Administration
+        </p>
+      </div>
+    `,
+  });
+
+  try {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": apiKey,
+      },
+      body: JSON.stringify({
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email, name: name || "Administrator" }],
+        subject: "Account Restored - The Wolverines Admin Portal",
+        htmlContent,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("sendUserUnblockedNotification failed:", errorText);
+    }
+  } catch (err) {
+    console.error("sendUserUnblockedNotification error:", err);
+  }
+}

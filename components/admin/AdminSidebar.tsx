@@ -18,10 +18,11 @@ import {
   Shield,
   X,
   Lock,
+  Users,
 } from "lucide-react";
-import { clearAdminSession, getAdminUser } from "@/app/lib/admin-api";
+import { clearAdminSession, getAdminUser, AdminUser } from "@/app/lib/admin-api";
 import { useEffect, useState } from "react";
-import ChangePasswordModal from "@/components/admin/ChangePasswordModal";
+import ProfileModal from "@/components/admin/ProfileModal";
 
 interface AdminSidebarProps {
   mobileOpen?: boolean;
@@ -75,16 +76,28 @@ const NAV_ITEMS = [
     href: "/admin/emails",
     icon: Mail,
   },
+  {
+    label: "Users",
+    href: "/admin/users",
+    icon: Users,
+    superAdminOnly: true,
+  },
 ];
 
 export default function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
+  const [user, setUser] = useState<AdminUser | null>(null);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 
   useEffect(() => {
     setUser(getAdminUser());
+
+    const handleUserUpdate = () => {
+      setUser(getAdminUser());
+    };
+    window.addEventListener("admin_user_updated", handleUserUpdate);
+    return () => window.removeEventListener("admin_user_updated", handleUserUpdate);
   }, []);
 
   const handleLogout = () => {
@@ -110,7 +123,7 @@ export default function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebar
               alt="Wolverines Logo"
               width={40}
               height={40}
-              className="h-10 w-10 object-contain drop-shadow-[0_2px_8px_rgba(211,47,47,0.3)] transition-transform duration-200 group-hover:scale-105"
+              className="h-10 w-10 object-contain transition-transform duration-200 group-hover:scale-105"
             />
           </div>
           <div>
@@ -138,7 +151,9 @@ export default function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebar
         <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-neutral-500">
           Main Navigation
         </div>
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter(
+          (item) => !(item as any).superAdminOnly || user?.role === "SUPER_ADMIN",
+        ).map((item) => {
           const active = isActive(item.href, item.exact);
           const Icon = item.icon;
           return (
@@ -195,7 +210,7 @@ export default function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebar
           <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={() => setChangePasswordOpen(true)}
-              title="Change Password"
+              title="Profile & Security"
               className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <Lock className="h-4 w-4" />
@@ -238,9 +253,10 @@ export default function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebar
         {content}
       </aside>
 
-      {/* Change Password Modal */}
-      <ChangePasswordModal
+      {/* Profile & Security Modal */}
+      <ProfileModal
         isOpen={changePasswordOpen}
+        initialTab="password"
         onClose={() => setChangePasswordOpen(false)}
       />
     </>

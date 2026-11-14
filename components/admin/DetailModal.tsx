@@ -36,9 +36,9 @@ export default function DetailModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/25 backdrop-blur-[2px] animate-in fade-in duration-200">
       <div
-        className={`relative w-full ${maxWidth} max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-[#141414] border border-white/10 shadow-2xl shadow-black/80`}
+        className={`relative w-full ${maxWidth} max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-[#141414] border border-white/10 shadow-2xl shadow-black/50`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}

@@ -33,6 +33,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if account is blocked
+    if (user.blocked) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Your account is blocked. Please contact a Super Administrator.",
+        },
+        { status: 403 },
+      );
+    }
+
     // check password
     const isValidPass = await comparePassword(password, user.password);
 

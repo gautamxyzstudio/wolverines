@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
         return;
       }
 
-      if (data.data?.role !== "ADMIN") {
+      if (data.data?.role !== "ADMIN" && data.data?.role !== "SUPER_ADMIN") {
         setErrorMessage("Access denied. Admin privileges required.");
         setIsLoading(false);
         return;
@@ -79,8 +79,8 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[#0b0b0b] relative overflow-hidden">
       {/* Background Decorative Gradients */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#D32F2F]/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-72 h-72 bg-red-950/20 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-950/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-72 h-72 bg-red-950/10 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo and Heading */}
@@ -91,7 +91,7 @@ export default function AdminLoginPage() {
               alt="The Wolverines Logo"
               width={64}
               height={64}
-              className="h-16 w-16 object-contain drop-shadow-[0_4px_16px_rgba(211,47,47,0.4)]"
+              className="h-16 w-16 object-contain"
               priority
             />
           </div>
@@ -116,7 +116,7 @@ export default function AdminLoginPage() {
             {/* Email Field */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-2">
-                Admin Email
+                Email
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-500">
@@ -176,7 +176,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#D32F2F] to-[#b91c1c] hover:from-red-600 hover:to-red-700 text-white font-bold text-sm tracking-wider uppercase shadow-xl shadow-red-950/50 flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
+              className="w-full mt-2 py-3.5 px-4 rounded-xl bg-[#D32F2F] hover:bg-[#b71c1c] text-white font-bold text-sm tracking-wider uppercase shadow-md hover:shadow-lg flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
             >
               {isLoading ? (
                 <>

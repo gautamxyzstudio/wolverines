@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { hashPassword } from "@/app/lib/password";
 import { updateUserSchema } from "@/app/validations/user.validation";
-import { requireAdmin, AuthError } from "@/app/lib/auth";
+import { requireSuperAdmin, AuthError } from "@/app/lib/auth";
+import {
+  sendUserBlockedNotification,
+  sendUserUnblockedNotification,
+} from "@/app/lib/email";
 
 // update the user
 
@@ -16,7 +20,7 @@ type RouteContext = {
 
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    await requireAdmin(request);
+    await requireSuperAdmin(request);
 
     const { id } = await context.params;
     const user = await prisma.user.findUnique({
@@ -28,6 +32,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         name: true,
         email: true,
         role: true,
+        blocked: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -73,7 +78,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
 export async function PUT(request: NextRequest, context: RouteContext) {
   try {
-    await requireAdmin(request);
+    const currentUser = await requireSuperAdmin(request);
 
     const { id } = await context.params;
 
@@ -119,7 +124,18 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const { name, email, password, role } = result.data;
+    // Super Admins cannot edit other Super Admins (view only)
+    if (existingUser.role === "SUPER_ADMIN" && existingUser.id !== currentUser.id) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Forbidden: Super Admins cannot edit other Super Admins. View only.",
+        },
+        { status: 403 },
+      );
+    }
+
+    const { name, email, password, role, blocked } = result.data;
 
     // Check duplicate email only if email is changed
     if (email && email !== existingUser.email) {
@@ -144,23 +160,52 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       name?: string;
       email?: string;
       password?: string;
-      role?: "USER" | "ADMIN";
+      role?: "SUPER_ADMIN" | "ADMIN";
+      blocked?: boolean;
     } = {};
 
     if (name !== undefined) {
       updateData.name = name;
     }
 
-    if (email !== undefined) {
-      updateData.email = email;
+    // Email and role cannot be changed when editing own profile
+    if (id !== currentUser.id) {
+      if (email !== undefined) {
+        updateData.email = email;
+      }
+
+      if (role !== undefined) {
+        updateData.role = role;
+      }
     }
 
-    if (role !== undefined) {
-      updateData.role = role;
+    // Block status updates
+    if (blocked !== undefined && blocked !== existingUser.blocked) {
+      if (id === currentUser.id) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "You cannot block or unblock your own account.",
+          },
+          { status: 400 },
+        );
+      }
+
+      if (existingUser.role === "SUPER_ADMIN") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Super Admins cannot block other Super Admins.",
+          },
+          { status: 403 },
+        );
+      }
+
+      updateData.blocked = blocked;
     }
 
     // Hash password if updated
-    if (password !== undefined) {
+    if (password !== undefined && password.trim().length > 0) {
       updateData.password = await hashPassword(password);
     }
 
@@ -174,10 +219,26 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         name: true,
         email: true,
         role: true,
+        blocked: true,
         createdAt: true,
         updatedAt: true,
       },
     });
+
+    // Send email notification on block status change
+    if (blocked !== undefined && blocked !== existingUser.blocked) {
+      if (blocked) {
+        sendUserBlockedNotification({
+          name: existingUser.name,
+          email: existingUser.email,
+        }).catch((err) => console.error("Failed to send user blocked email:", err));
+      } else {
+        sendUserUnblockedNotification({
+          name: existingUser.name,
+          email: existingUser.email,
+        }).catch((err) => console.error("Failed to send user unblocked email:", err));
+      }
+    }
 
     return NextResponse.json(
       {
@@ -212,7 +273,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    await requireAdmin(request);
+    const currentUser = await requireSuperAdmin(request);
     const { id } = await context.params;
 
     if (!id) {
@@ -239,6 +300,25 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
+    if (existingUser.id === currentUser.id) {
+      return NextResponse.json(
+        {
+          message: "You cannot delete your own account.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Super Admins cannot delete other Super Admins
+    if (existingUser.role === "SUPER_ADMIN") {
+      return NextResponse.json(
+        {
+          message: "Forbidden: Super Admins cannot delete other Super Admins. View only.",
+        },
+        { status: 403 },
+      );
+    }
+
     const deletedUser = await prisma.user.delete({
       where: {
         id: id,
@@ -248,6 +328,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         name: true,
         email: true,
         role: true,
+        blocked: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -274,6 +355,142 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return NextResponse.json(
       {
         message: "failed to delete the user",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+// Toggle block / recover user
+export async function PATCH(request: NextRequest, context: RouteContext) {
+  try {
+    const currentUser = await requireSuperAdmin(request);
+    const { id } = await context.params;
+
+    if (!id) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "User ID is required",
+        },
+        { status: 400 },
+      );
+    }
+
+    const body = await request.json();
+    const { blocked } = body;
+
+    if (typeof blocked !== "boolean") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "'blocked' boolean field is required",
+        },
+        { status: 400 },
+      );
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!targetUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "User not found",
+        },
+        { status: 404 },
+      );
+    }
+
+    // Super Admin cannot block themselves
+    if (targetUser.id === currentUser.id) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "You cannot block or unblock your own account.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Super Admin cannot block other Super Admins
+    if (targetUser.role === "SUPER_ADMIN") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Super Admins cannot block other Super Admins.",
+        },
+        { status: 403 },
+      );
+    }
+
+    // If already in that state, return early
+    if (targetUser.blocked === blocked) {
+      return NextResponse.json(
+        {
+          success: true,
+          message: blocked ? "User is already blocked." : "User is already active.",
+          data: targetUser,
+        },
+        { status: 200 },
+      );
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { blocked },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        blocked: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    // Send email notification asynchronously
+    if (blocked) {
+      sendUserBlockedNotification({
+        name: targetUser.name,
+        email: targetUser.email,
+      }).catch((err) => console.error("Failed to send user blocked email:", err));
+    } else {
+      sendUserUnblockedNotification({
+        name: targetUser.name,
+        email: targetUser.email,
+      }).catch((err) => console.error("Failed to send user unblocked email:", err));
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: blocked
+          ? `User "${targetUser.name}" has been blocked.`
+          : `User "${targetUser.name}" has been unblocked and recovered.`,
+        data: updatedUser,
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: error.message,
+        },
+        { status: error.status },
+      );
+    }
+
+    console.error("Block/unblock user error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to update user block status",
       },
       { status: 500 },
     );

@@ -15,6 +15,7 @@ export const createUserSchema = z.object({
     .min(6, "Password must be at least 6 characters"),
 
   role: z.enum(["USER", "ADMIN"]),
+  role: z.enum(["SUPER_ADMIN", "ADMIN"]),
 });
 
 export const updateUserSchema = z.object({
@@ -35,6 +36,10 @@ export const updateUserSchema = z.object({
     .optional(),
 
   role: z
-    .enum(["USER", "ADMIN"])
+    .enum(["SUPER_ADMIN", "ADMIN"])
+    .optional(),
+
+  blocked: z
+    .boolean()
     .optional(),
 });

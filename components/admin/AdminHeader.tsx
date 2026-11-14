@@ -1,10 +1,10 @@
 "use client";
 
-import { Menu, LogOut, ShieldCheck, User, Lock, ChevronDown } from "lucide-react";
+import { Menu, LogOut, ShieldCheck, Crown, User, Lock, ChevronDown } from "lucide-react";
 import { clearAdminSession, getAdminUser } from "@/app/lib/admin-api";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import ChangePasswordModal from "@/components/admin/ChangePasswordModal";
+import ProfileModal from "@/components/admin/ProfileModal";
 
 interface AdminHeaderProps {
   title: string;
@@ -19,12 +19,18 @@ export default function AdminHeader({
 }: AdminHeaderProps) {
   const router = useRouter();
   const [user, setUser] = useState<{ name?: string; role?: string; email?: string } | null>(null);
-  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setUser(getAdminUser());
+
+    const handleUserUpdate = () => {
+      setUser(getAdminUser());
+    };
+    window.addEventListener("admin_user_updated", handleUserUpdate);
+    return () => window.removeEventListener("admin_user_updated", handleUserUpdate);
   }, []);
 
   // Close dropdown on outside click
@@ -69,9 +75,19 @@ export default function AdminHeader({
 
         <div className="flex items-center gap-3">
           {/* Role Badge */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-950/40 border border-red-500/30 text-[11px] font-semibold text-red-400 uppercase tracking-wider">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            <span>{user?.role || "ADMIN"}</span>
+          <div
+            className={`hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-semibold uppercase tracking-wider ${
+              user?.role === "SUPER_ADMIN"
+                ? "bg-red-950/50 border-red-500/30 text-red-400"
+                : "bg-white/[0.04] border-white/10 text-neutral-300"
+            }`}
+          >
+            {user?.role === "SUPER_ADMIN" ? (
+              <Crown className="h-3.5 w-3.5 text-red-400" />
+            ) : (
+              <ShieldCheck className="h-3.5 w-3.5 text-neutral-400" />
+            )}
+            <span>{user?.role ? user.role.replace("_", " ") : "ADMIN"}</span>
           </div>
 
           {/* User Profile Pill & Dropdown */}
@@ -96,20 +112,20 @@ export default function AdminHeader({
 
             {/* Profile Dropdown Menu */}
             {profileDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-[#141414] border border-white/10 p-1.5 shadow-2xl shadow-black/80 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 z-50">
-                {/* Change Password option */}
+              <div className="absolute right-0 mt-2 w-44 rounded-2xl bg-[#141414] border border-white/10 p-1.5 shadow-2xl shadow-black/80 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 z-50">
+                {/* Profile (Unified Details & Password) */}
                 <button
                   type="button"
                   onClick={() => {
                     setProfileDropdownOpen(false);
-                    setChangePasswordOpen(true);
+                    setProfileModalOpen(true);
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-300 hover:text-white hover:bg-white/10 transition-colors text-left cursor-pointer group"
                 >
                   <div className="p-1 rounded-lg bg-white/5 text-neutral-400 group-hover:text-[#D32F2F] group-hover:bg-red-950/30 transition-colors">
-                    <Lock className="h-3.5 w-3.5" />
+                    <User className="h-3.5 w-3.5" />
                   </div>
-                  <span>Change Password</span>
+                  <span>Profile</span>
                 </button>
 
                 {/* Sign Out option */}
@@ -129,10 +145,11 @@ export default function AdminHeader({
         </div>
       </header>
 
-      {/* Change Password Modal */}
-      <ChangePasswordModal
-        isOpen={changePasswordOpen}
-        onClose={() => setChangePasswordOpen(false)}
+      {/* Unified Profile Modal */}
+      <ProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        onSuccess={(updated) => setUser(updated)}
       />
     </>
   );

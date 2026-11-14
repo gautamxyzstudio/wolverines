@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/app/lib/prisma";
-import { decode } from "punycode";
 
 export class AuthError extends Error {
   status: number;
@@ -15,7 +14,7 @@ export class AuthError extends Error {
 
 type JwtPayload = {
   userId: string;
-  role: "USER" | "ADMIN";
+  role: "SUPER_ADMIN" | "ADMIN";
 };
 
 export async function requireAdmin(request: NextRequest) {
@@ -53,6 +52,7 @@ export async function requireAdmin(request: NextRequest) {
       role: true,
       email: true,
       name: true,
+      blocked: true,
     }
   });
 
@@ -60,8 +60,22 @@ export async function requireAdmin(request: NextRequest) {
     throw new AuthError("user not found", 404);
   }
 
-  if (user.role !== 'ADMIN') {
+  if (user.blocked) {
+    throw new AuthError("Your account is blocked. Access denied.", 403);
+  }
+
+  if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
     throw new AuthError("Forbidden Access", 403);
+  }
+
+  return user;
+}
+
+export async function requireSuperAdmin(request: NextRequest) {
+  const user = await requireAdmin(request);
+
+  if (user.role !== "SUPER_ADMIN") {
+    throw new AuthError("Forbidden Access: Super Admin role required", 403);
   }
 
   return user;

@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../lib/prisma";
 import { hashPassword } from "@/app/lib/password";
 import { createUserSchema } from "@/app/validations/user.validation";
-import { requireAdmin, AuthError } from "@/app/lib/auth";
+import { requireSuperAdmin, AuthError } from "@/app/lib/auth";
 
 // get all users
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin(request);
+    await requireSuperAdmin(request);
 
     const users = await prisma.user.findMany({
       select: {
@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
         email: true,
         createdAt: true,
         role: true,
+        blocked: true,
         updatedAt: true,
       },
       orderBy: {
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdmin(request);
+    await requireSuperAdmin(request);
 
     const data = await request.json();
 

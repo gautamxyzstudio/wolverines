@@ -555,7 +555,7 @@ export default function CampPricingPage() {
 
       {/* Pricing Edit / Create Modal */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 backdrop-blur-[2px] animate-in fade-in">
           <div className="relative w-full max-w-lg rounded-3xl bg-[#141414] border border-white/10 p-6 sm:p-8 shadow-2xl">
             <button
               onClick={() => setIsFormOpen(false)}

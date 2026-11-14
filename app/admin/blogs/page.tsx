@@ -405,7 +405,7 @@ export default function BlogsManagementPage() {
 
       {/* Create / Edit Modal */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/25 backdrop-blur-[2px] overflow-y-auto animate-in fade-in">
           <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden rounded-3xl bg-[#141414] border border-white/10 shadow-2xl">
             {/* Header */}
             <div className="shrink-0 flex items-center justify-between px-6 py-5 border-b border-white/10 bg-[#0f0f0f]">
