@@ -9,6 +9,10 @@ import {
   sendDonationThankYou,
   sendDonationAdminNotification,
 } from "@/app/lib/email";
+import {
+  sendYearEndParentConfirmation,
+  sendYearEndAdminNotification,
+} from "@/app/lib/year-end-email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -79,7 +83,7 @@ export async function POST(request: NextRequest) {
 
       const paymentType = session.metadata?.type;
 
-      // Validate camp payment metadata
+      // Validate camp / registration metadata
       if (paymentType !== "DONATION" && !pendingRegistrationId) {
         return NextResponse.json(
           {
@@ -90,9 +94,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Validate camp type
+      // Validate camp type (only when not donation and not year-end celebration)
       if (
         paymentType !== "DONATION" &&
+        paymentType !== "YEAR_END_CELEBRATION" &&
         campType !== "SUMMER" &&
         campType !== "WINTER"
       ) {
@@ -412,6 +417,103 @@ export async function POST(request: NextRequest) {
         }
 
         console.log("Donation created:", donation.id);
+      }
+
+      // =========================
+      // YEAR-END CELEBRATION 2026
+      // =========================
+      if (paymentType === "YEAR_END_CELEBRATION") {
+        const existingRegistration =
+          await prisma.yearEndRegistration.findUnique({
+            where: {
+              stripeCheckoutSessionId: session.id,
+            },
+          });
+
+        // Prevent duplicate processing
+        if (existingRegistration) {
+          return NextResponse.json(
+            {
+              success: true,
+              message: "Year-End Celebration registration already processed",
+            },
+            { status: 200 },
+          );
+        }
+
+        const pendingRegistration =
+          await prisma.pendingYearEndRegistration.findUnique({
+            where: {
+              id: pendingRegistrationId,
+            },
+          });
+
+        if (!pendingRegistration) {
+          return NextResponse.json(
+            {
+              success: true,
+              message:
+                "Pending Year-End Celebration registration not found or already processed",
+            },
+            { status: 200 },
+          );
+        }
+
+        const paymentIntentId =
+          typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : session.payment_intent?.id || null;
+
+        const yearEndRegistration = await prisma.$transaction(async (tx) => {
+          const created = await tx.yearEndRegistration.create({
+            data: {
+              registrationId: pendingRegistration.registrationId,
+              primaryContactName: pendingRegistration.primaryContactName,
+              email: pendingRegistration.email,
+              countryCode: pendingRegistration.countryCode,
+              contactNumber: pendingRegistration.contactNumber,
+              secondaryCountryCode: pendingRegistration.secondaryCountryCode,
+              secondaryContactNumber:
+                pendingRegistration.secondaryContactNumber,
+              notes: pendingRegistration.notes,
+              ticketDetails: pendingRegistration.ticketDetails as any,
+              totalAttendees: pendingRegistration.totalAttendees,
+              subtotal: pendingRegistration.subtotal,
+              processingFee: pendingRegistration.processingFee,
+              totalAmount: pendingRegistration.totalAmount,
+              paymentStatus: "PAID",
+              stripeCheckoutSessionId: session.id,
+              stripePaymentIntentId: paymentIntentId,
+            },
+          });
+
+          await tx.pendingYearEndRegistration.delete({
+            where: {
+              id: pendingRegistration.id,
+            },
+          });
+
+          return created;
+        });
+
+        console.log(
+          "Year-End Celebration registration confirmed:",
+          yearEndRegistration.registrationId,
+        );
+
+        // Send parent confirmation & admin notification emails
+        try {
+          await Promise.allSettled([
+            sendYearEndParentConfirmation(yearEndRegistration),
+            sendYearEndAdminNotification(yearEndRegistration),
+          ]);
+          console.log("Year-End Celebration confirmation emails sent successfully");
+        } catch (emailError) {
+          console.error(
+            "Year-End Celebration email notification error:",
+            emailError,
+          );
+        }
       }
     }
 

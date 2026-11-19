@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import EventsHero from "@/components/events/EventsHero";
+import YearEndEventBanner from "@/components/events/YearEndEventBanner";
 import IndoorPracticeSchedule from "@/components/events/IndoorPracticeSchedule";
 import StickyEventCalendar from "@/components/events/StickyEventCalendar";
 
@@ -16,6 +17,7 @@ export default function EventsPage() {
       {/* Events Hero Section */}
       <EventsHero />
 
+    
       {/* Indoor Practice Schedule Section */}
       <IndoorPracticeSchedule />
 

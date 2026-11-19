@@ -19,6 +19,7 @@ import {
   X,
   Lock,
   Users,
+  Sparkles,
 } from "lucide-react";
 import { clearAdminSession, getAdminUser, AdminUser } from "@/app/lib/admin-api";
 import { useEffect, useState } from "react";
@@ -40,6 +41,11 @@ const NAV_ITEMS = [
     label: "Camp Registrations",
     href: "/admin/registrations",
     icon: ClipboardList,
+  },
+  {
+    label: "Year-End 2026",
+    href: "/admin/event-registrations",
+    icon: Sparkles,
   },
   {
     label: "General Enquiries",
@@ -161,16 +167,14 @@ export default function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebar
               key={item.href}
               href={item.href}
               onClick={() => setMobileOpen && setMobileOpen(false)}
-              className={`flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-medium text-sm transition-all duration-200 group ${
-                active
-                  ? "bg-gradient-to-r from-[#D32F2F] to-[#b91c1c] text-white shadow-lg shadow-red-950/40 font-semibold"
-                  : "text-neutral-400 hover:text-white hover:bg-white/5"
-              }`}
+              className={`flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-medium text-sm transition-all duration-200 group ${active
+                ? "bg-gradient-to-r from-[#D32F2F] to-[#b91c1c] text-white shadow-lg shadow-red-950/40 font-semibold"
+                : "text-neutral-400 hover:text-white hover:bg-white/5"
+                }`}
             >
               <Icon
-                className={`h-4.5 w-4.5 transition-transform duration-200 group-hover:scale-110 ${
-                  active ? "text-white" : "text-neutral-400 group-hover:text-[#D32F2F]"
-                }`}
+                className={`h-4.5 w-4.5 transition-transform duration-200 group-hover:scale-110 ${active ? "text-white" : "text-neutral-400 group-hover:text-[#D32F2F]"
+                  }`}
               />
               <span>{item.label}</span>
             </Link>
@@ -246,9 +250,8 @@ export default function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebar
 
       {/* Mobile Slide-out Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out lg:hidden ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out lg:hidden ${mobileOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         {content}
       </aside>

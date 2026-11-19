@@ -49,15 +49,13 @@ export default function CustomDatePicker({
   // Effective max date (default: maxYear-12-31)
   const effectiveMaxDate = useMemo(() => {
     if (maxDate) return maxDate;
-    const d = new Date();
-    d.setFullYear(maxYear);
-    return d;
+    return new Date(maxYear, 11, 31, 23, 59, 59, 999);
   }, [maxDate, maxYear]);
 
   // Effective min date (default: minYear-01-01)
   const effectiveMinDate = useMemo(() => {
     if (minDate) return minDate;
-    return new Date(minYear, 0, 1);
+    return new Date(minYear, 0, 1, 0, 0, 0, 0);
   }, [minDate, minYear]);
 
   // Parse initial state from value
@@ -300,16 +298,44 @@ export default function CustomDatePicker({
                 onChange={(e) => setViewMonth(Number(e.target.value))}
                 className="bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-semibold py-1 px-2 rounded border-0 outline-none cursor-pointer"
               >
-                {MONTH_NAMES.map((m, idx) => (
-                  <option key={m} value={idx}>
-                    {m}
-                  </option>
-                ))}
+                {MONTH_NAMES.map((m, idx) => {
+                  const isMonthDisabled =
+                    (effectiveMaxDate &&
+                      new Date(viewYear, idx, 1) > effectiveMaxDate) ||
+                    (effectiveMinDate &&
+                      new Date(viewYear, idx + 1, 0) < effectiveMinDate);
+                  return (
+                    <option
+                      key={m}
+                      value={idx}
+                      disabled={Boolean(isMonthDisabled)}
+                    >
+                      {m}
+                    </option>
+                  );
+                })}
               </select>
 
               <select
                 value={viewYear}
-                onChange={(e) => setViewYear(Number(e.target.value))}
+                onChange={(e) => {
+                  const newY = Number(e.target.value);
+                  setViewYear(newY);
+                  if (
+                    effectiveMaxDate &&
+                    newY === effectiveMaxDate.getFullYear() &&
+                    viewMonth > effectiveMaxDate.getMonth()
+                  ) {
+                    setViewMonth(effectiveMaxDate.getMonth());
+                  }
+                  if (
+                    effectiveMinDate &&
+                    newY === effectiveMinDate.getFullYear() &&
+                    viewMonth < effectiveMinDate.getMonth()
+                  ) {
+                    setViewMonth(effectiveMinDate.getMonth());
+                  }
+                }}
                 className="bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-semibold py-1 px-2 rounded border-0 outline-none cursor-pointer font-mono"
               >
                 {yearsList.map((y) => (

@@ -381,3 +381,71 @@ model EmailHistory {
   sentAt          DateTime             @default(now())
   createdAt       DateTime             @default(now())
 }
+
+enum YearEndPaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model PendingYearEndRegistration {
+  id                      String               @id @default(cuid())
+  registrationId          String               @unique
+
+  // Primary Contact / Parent Details
+  primaryContactName      String
+  email                   String
+  countryCode             String
+  contactNumber           String
+  secondaryCountryCode    String?
+  secondaryContactNumber  String?
+  notes                   String?
+
+  // Ticket Categories & Details (Stored as JSON)
+  ticketDetails           Json
+  totalAttendees          Int
+
+  // Pricing (including 4% processing fee)
+  subtotal                Decimal              @db.Decimal(10, 2)
+  processingFee           Decimal              @db.Decimal(10, 2)
+  totalAmount             Decimal              @db.Decimal(10, 2)
+
+  // Payment Tracking
+  paymentStatus           YearEndPaymentStatus @default(PENDING)
+  stripeCheckoutSessionId String?              @unique
+
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+}
+
+model YearEndRegistration {
+  id                      String               @id @default(cuid())
+  registrationId          String               @unique
+
+  // Primary Contact / Parent Details
+  primaryContactName      String
+  email                   String
+  countryCode             String
+  contactNumber           String
+  secondaryCountryCode    String?
+  secondaryContactNumber  String?
+  notes                   String?
+
+  // Ticket Categories & Details
+  ticketDetails           Json
+  totalAttendees          Int
+
+  // Pricing
+  subtotal                Decimal              @db.Decimal(10, 2)
+  processingFee           Decimal              @db.Decimal(10, 2)
+  totalAmount             Decimal              @db.Decimal(10, 2)
+
+  // Confirmed Payment Tracking
+  paymentStatus           YearEndPaymentStatus @default(PAID)
+  stripeCheckoutSessionId String?              @unique
+  stripePaymentIntentId   String?              @unique
+
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+}
