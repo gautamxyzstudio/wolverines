@@ -41,9 +41,9 @@ interface AttendeeRow {
   dateOfBirth: string;
 }
 
-// Event reference date: Dec 19, 2026. Minimum age for ticket holders is 5 years old.
+// Reference cutoff date: Dec 1, 2026. Minimum age for ticket holders is 5 years old.
 // Children under 5 attend free when accompanied by family and do not need a ticket.
-const MAX_ATTENDEE_BIRTH_DATE = new Date(2021, 11, 19, 23, 59, 59);
+const MAX_ATTENDEE_BIRTH_DATE = new Date(2021, 11, 1, 23, 59, 59);
 const MAX_ATTENDEE_BIRTH_YEAR = 2021;
 
 export default function YearEndRegistrationForm() {
@@ -60,7 +60,6 @@ export default function YearEndRegistrationForm() {
     () => COUNTRIES.find((c) => c.code === "CA") || COUNTRIES[0],
   );
   const [secondaryContactNumber, setSecondaryContactNumber] = useState("");
-  const [notes, setNotes] = useState("");
 
   // Step 1: 2 Main Options (Individual vs Family)
   const [registrationType, setRegistrationType] =
@@ -200,7 +199,7 @@ export default function YearEndRegistrationForm() {
 
       const age = calculateAge(att.dateOfBirth);
       if (age !== null && age < 5) {
-        const msg = `${label} is under 5 years old. Children under 5 attend free and do not require a ticket. Attendees must be at least 5 years old (born on or before Dec 19, 2021).`;
+        const msg = `${label} is under 5 years old. Children under 5 attend free and do not require a ticket. Attendees must be at least 5 years old (born on or before Dec 1, 2021).`;
         setErrorMessage(msg);
         setToast({
           type: "error",
@@ -223,7 +222,7 @@ export default function YearEndRegistrationForm() {
           ? secondaryCountry.dial
           : null,
         secondaryContactNumber: secondaryContactNumber.trim() || null,
-        notes: notes.trim() || null,
+        notes: null,
         registrationType,
         attendees: activeAttendees.map((a) => ({
           name: capitalizeWords(a.name),
@@ -543,7 +542,7 @@ export default function YearEndRegistrationForm() {
                               maxDate={MAX_ATTENDEE_BIRTH_DATE}
                             />
                             <p className="text-[11px] text-neutral-500 mt-1">
-                              Must be at least 5 years old (born on or before Dec 19, 2021).
+                              Must be at least 5 years old (born on or before Dec 1, 2021).
                             </p>
                           </div>
                         </div>
@@ -553,7 +552,7 @@ export default function YearEndRegistrationForm() {
                           <div className="pt-0.5 flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-semibold text-neutral-600">
-                                Age on Dec 19, 2026: <strong>{age} yrs</strong>
+                                Age on Dec 1, 2026: <strong>{age} yrs</strong>
                               </span>
                               <span
                                 className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${categoryInfo.id === "under5"
@@ -665,20 +664,6 @@ export default function YearEndRegistrationForm() {
                       selectedCountry={secondaryCountry}
                       onCountryChange={setSecondaryCountry}
                       placeholder="Alternative number"
-                    />
-                  </div>
-
-                  {/* Notes / Dietary requirements */}
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold uppercase text-neutral-700 mb-1.5">
-                      Special Requests / Dietary Notes (Optional)
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Dietary preferences  seating requests, etc."
-                      className="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#D9001B] text-sm resize-none"
                     />
                   </div>
                 </div>

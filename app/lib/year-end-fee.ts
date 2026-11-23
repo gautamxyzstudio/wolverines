@@ -55,11 +55,11 @@ export interface YearEndFeeCalculation {
 }
 
 /**
- * Calculates attendee age relative to Event Date: December 19, 2026
+ * Calculates attendee age relative to Reference Date: December 1, 2026
  */
 export function calculateAge(
   dobString: string,
-  eventDate = new Date(2026, 11, 19),
+  eventDate = new Date(2026, 11, 1),
 ): number | null {
   if (!dobString) return null;
   const parts = dobString.trim().split("-");
